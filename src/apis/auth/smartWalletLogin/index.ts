@@ -1,11 +1,10 @@
 import http, { ApiResponse } from '@apis/axios'
 
 export type RequestType = {
-  code: string
+  address: string
 }
 
 export type ResponseType = ApiResponse<{
-  email: string // deprecated
   identifier: string
   nickname: string | null
   jwtToken: string

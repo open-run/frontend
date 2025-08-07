@@ -25,7 +25,7 @@ function SignInApp() {
   useMessageHandler(({ type, data }) => {
     switch (type) {
       case MESSAGE.RESPONSE_SMART_WALLET_CONNECT:
-        smartWalletLogin({ code: data as SmartWalletConnectResponse })
+        smartWalletLogin({ address: data as SmartWalletConnectResponse })
         break
 
       case MESSAGE.RESPONSE_SMART_WALLET_CONNECT_ERROR:
@@ -64,7 +64,7 @@ function SignInBrowser() {
     setIsLoading(true)
 
     if (address) {
-      smartWalletLogin({ code: address })
+      smartWalletLogin({ address: address })
       return
     }
 
@@ -74,7 +74,7 @@ function SignInBrowser() {
         onSuccess: (data) => {
           setIsLoading(false)
           const address = data.accounts[0]
-          smartWalletLogin({ code: address })
+          smartWalletLogin({ address: address })
         },
       },
     )
