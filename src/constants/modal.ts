@@ -11,7 +11,6 @@ export const MODAL_KEY = {
   ALERT: 'alert',
   ADDRESS_SEARCH: 'address-search',
   TOAST: 'toast',
-  AVATAR_CAPTURE: 'avatar-capture',
   REWARD: 'reward',
   SETTING: 'setting',
   DELETE_USER: 'delete-user',
