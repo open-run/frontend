@@ -1,9 +1,11 @@
 'use client'
 
 import { ReactNode, useEffect, useState } from 'react'
+import { usePathname } from 'next/navigation'
 import MarketingLayout from './MarketingLayout'
 
 export default function Layout({ children }: { children: ReactNode }) {
+  const pathname = usePathname()
   const [isDesktop, setIsDesktop] = useState(true)
 
   useEffect(() => {
@@ -19,6 +21,10 @@ export default function Layout({ children }: { children: ReactNode }) {
     window.addEventListener('resize', checkScreenSize)
     return () => window.removeEventListener('resize', checkScreenSize)
   }, [])
+
+  if (pathname.startsWith('/admin')) {
+    return <main className='h-dvh w-dvw overflow-hidden'>{children}</main>
+  }
 
   // 576px 이상 & iframe이 아닌 경우: 마케팅 화면
   if (isDesktop) {
