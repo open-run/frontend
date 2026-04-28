@@ -1,62 +1,56 @@
 'use client'
 
-import html2canvas from 'html2canvas'
-import Image from 'next/image'
 import { useRouter } from 'next/navigation'
 import { useEffect, useRef, useState } from 'react'
-import { useModal } from '@contexts/ModalProvider'
 import { Avatar, SelectedCategory, WearingAvatar } from '@type/avatar'
 import AvatarComponent from '@shared/Avatar'
 import { ArrowLeftIcon } from '@icons/arrow'
 import { TransparentOpenrunIcon } from '@icons/openrun'
 import { ResetIcon } from '@icons/reset'
-import { cropSquareImage } from '@utils/image'
-import { getAvatarList, getWearingAvatar, saveWearingAvatar } from '@utils/avatar-storage'
-import { MODAL_KEY } from '@constants/modal'
+import { SaveWearingNftAvatarRequest } from '@apis/v1/nft/avatar-items'
+import { useSaveWearingNftAvatarMutation } from '@apis/v1/nft/avatar-items/mutation'
+import { useOwnedNftAvatarItemsQuery, useWearingNftAvatarQuery } from '@apis/v1/nft/avatar-items/query'
 import { colors } from '@styles/colors'
-import AvatarCaptureModal from './AvatarCaptureModal'
 import AvatarList from './AvatarList'
 import Category from './Category'
 
+const EMPTY_WEARING_AVATAR: WearingAvatar = {
+  upperClothing: null,
+  lowerClothing: null,
+  fullSet: null,
+  footwear: null,
+  face: null,
+  skin: null,
+  hair: null,
+  accessories: {
+    'head-accessories': null,
+    'ear-accessories': null,
+    'body-accessories': null,
+    'eye-accessories': null,
+  },
+}
+
 export default function AvatarPage() {
   const router = useRouter()
-  const { showModal } = useModal()
 
   const avatarRef = useRef<HTMLDivElement>(null)
-  const [avatarList, setAvatarList] = useState<Avatar[]>([])
-  const [selectedAvatar, setSelectedAvatar] = useState<WearingAvatar>({
-    upperClothing: null,
-    lowerClothing: null,
-    fullSet: null,
-    footwear: null,
-    face: null,
-    skin: null,
-    hair: null,
-    accessories: {
-      'head-accessories': null,
-      'ear-accessories': null,
-      'body-accessories': null,
-      'eye-accessories': null,
-    },
-  })
+  const [selectedAvatar, setSelectedAvatar] = useState<WearingAvatar>(EMPTY_WEARING_AVATAR)
   const [selectedCategory, setSelectedCategory] = useState<SelectedCategory>({
     mainCategory: 'upperClothing',
     subCategory: null,
   })
-  const [isLoaded, setIsLoaded] = useState(false)
+  const { data: ownedAvatarItems, isLoading: isOwnedAvatarItemsLoading } = useOwnedNftAvatarItemsQuery()
+  const { data: wearingAvatar, isLoading: isWearingAvatarLoading } = useWearingNftAvatarQuery()
+  const saveWearingAvatarMutation = useSaveWearingNftAvatarMutation()
 
-  // localStorage에서 데이터 로드
   useEffect(() => {
-    setAvatarList(getAvatarList())
-    setSelectedAvatar(getWearingAvatar())
-    setIsLoaded(true)
-  }, [])
+    if (wearingAvatar?.data) {
+      setSelectedAvatar(wearingAvatar.data)
+    }
+  }, [wearingAvatar])
 
-  // 아바타 변경 시 localStorage에 자동 저장
-  useEffect(() => {
-    if (!isLoaded) return
-    saveWearingAvatar(selectedAvatar)
-  }, [selectedAvatar, isLoaded])
+  const avatarList = ownedAvatarItems?.data ?? []
+  const isLoaded = !isOwnedAvatarItemsLoading && !isWearingAvatarLoading
 
   const filteredAvatarList = avatarList.filter((avatar) => {
     if (selectedCategory.mainCategory === avatar.mainCategory) {
@@ -67,35 +61,14 @@ export default function AvatarPage() {
   })
 
   const handleReset = () => {
-    setSelectedAvatar({
-      upperClothing: null,
-      lowerClothing: null,
-      fullSet: null,
-      footwear: null,
-      face: null,
-      skin: null,
-      hair: null,
-      accessories: {
-        'head-accessories': null,
-        'ear-accessories': null,
-        'body-accessories': null,
-        'eye-accessories': null,
-      },
-    })
+    setSelectedAvatar(EMPTY_WEARING_AVATAR)
   }
 
-  const handleCapture = async () => {
-    if (!avatarRef.current) return
-
-    const canvas = await html2canvas(avatarRef.current, { backgroundColor: null })
-    const originalImgData = canvas.toDataURL('image/png')
-
-    // 원형으로 자르기
-    const circularImgData = await cropSquareImage(originalImgData)
-
-    showModal({
-      key: MODAL_KEY.AVATAR_CAPTURE,
-      component: <AvatarCaptureModal imgData={circularImgData} />,
+  const handleSave = () => {
+    saveWearingAvatarMutation.mutate(toSaveWearingAvatarRequest(selectedAvatar), {
+      onSuccess: ({ data }) => {
+        setSelectedAvatar(data)
+      },
     })
   }
 
@@ -121,7 +94,8 @@ export default function AvatarPage() {
         <h1 className='text-16 font-bold text-black'>아바타 변경</h1>
         <button
           className='absolute right-16 translate-x-8 rounded-8 px-8 py-4 active-press-duration active:scale-90 active:bg-gray/50'
-          onClick={handleCapture}>
+          disabled={saveWearingAvatarMutation.isPending}
+          onClick={handleSave}>
           <span className='text-14 text-black'>저장</span>
         </button>
       </header>
@@ -167,6 +141,27 @@ export default function AvatarPage() {
   )
 }
 
-function Parts({ src, alt }: { src: string; alt: string }) {
-  return <Image className='object-contain' src={src} alt={alt} priority fill sizes='(max-width: 768px) 100vw, 33vw' />
+function toSaveWearingAvatarRequest(avatar: WearingAvatar): SaveWearingNftAvatarRequest {
+  return {
+    fullSet: getNftItemId(avatar.fullSet),
+    upperClothing: getNftItemId(avatar.upperClothing),
+    lowerClothing: getNftItemId(avatar.lowerClothing),
+    footwear: getNftItemId(avatar.footwear),
+    face: getNftItemId(avatar.face),
+    skin: getNftItemId(avatar.skin),
+    hair: getNftItemId(avatar.hair),
+    accessories: {
+      'head-accessories': getNftItemId(avatar.accessories['head-accessories']),
+      'eye-accessories': getNftItemId(avatar.accessories['eye-accessories']),
+      'ear-accessories': getNftItemId(avatar.accessories['ear-accessories']),
+      'body-accessories': getNftItemId(avatar.accessories['body-accessories']),
+    },
+  }
+}
+
+function getNftItemId(avatar: Avatar | null): number | null {
+  if (avatar == null) return null
+
+  const nftItemId = avatar.nftItemId ?? Number(avatar.id)
+  return Number.isFinite(nftItemId) ? nftItemId : null
 }

@@ -1,11 +1,9 @@
 import clsx from 'clsx'
 import { motion } from 'framer-motion'
 import Image from 'next/image'
-import { usePathname, useRouter } from 'next/navigation'
-import { useEffect, useState } from 'react'
+import { useRouter } from 'next/navigation'
 import { useAppStore } from '@store/app'
 import { useUserStore } from '@store/user'
-import { WearingAvatar } from '@type/avatar'
 import { Weather } from '@type/weather'
 import AddressClipboard from '@shared/AddressClipboard'
 import Avatar from '@shared/Avatar'
@@ -14,7 +12,7 @@ import { CopyClipboardIcon } from '@icons/clipboard'
 import { UpperClothIcon } from '@icons/upper-cloth'
 import useGeolocation from '@hooks/useGeolocation'
 import { useReverseGeocoding } from '@apis/maps/reverse-geocoding/query'
-import { getWearingAvatar } from '@utils/avatar-storage'
+import { useWearingNftAvatarQuery } from '@apis/v1/nft/avatar-items/query'
 import { useCurrentWeather } from '@apis/weather/query'
 import addDelimiter from '@utils/addDelimiter'
 import { colors } from '@styles/colors'
@@ -22,15 +20,9 @@ import { colors } from '@styles/colors'
 export default function Header({ isSmallHeaderActive }: { isSmallHeaderActive: boolean }) {
   const { isApp, insets } = useAppStore()
   const router = useRouter()
-  const pathname = usePathname()
   const { userInfo } = useUserStore()
 
-  const [wearingAvatar, setWearingAvatar] = useState<WearingAvatar | null>(null)
-
-  // 페이지 이동 시 (아바타 페이지에서 돌아올 때 등) localStorage에서 최신 데이터 반영
-  useEffect(() => {
-    setWearingAvatar(getWearingAvatar())
-  }, [pathname])
+  const { data: wearingAvatar } = useWearingNftAvatarQuery()
   const { location, refetch } = useGeolocation()
   const { data: reverseGeocode } = useReverseGeocoding(
     { lat: location?.lat ?? 0, lng: location?.lng ?? 0 },
@@ -83,7 +75,7 @@ export default function Header({ isSmallHeaderActive }: { isSmallHeaderActive: b
               sizes='(max-width: 768px) 100vw, 176px'
             />
           )}
-          {wearingAvatar && <Avatar className='absolute h-200 w-160' {...wearingAvatar} />}
+          {wearingAvatar?.data && <Avatar className='absolute h-200 w-160' {...wearingAvatar.data} />}
 
           <div className={clsx('absolute left-16 top-8 app:top-0')}>
             <AvatarButton onClick={() => router.push('/avatar')} />
@@ -153,7 +145,7 @@ export default function Header({ isSmallHeaderActive }: { isSmallHeaderActive: b
               priority
             />
           )}
-          {wearingAvatar && <Avatar className='absolute h-90 w-68' {...wearingAvatar} />}
+          {wearingAvatar?.data && <Avatar className='absolute h-90 w-68' {...wearingAvatar.data} />}
 
           <div className={clsx('absolute left-16 top-8 app:top-0')}>
             <AvatarButton onClick={() => router.push('/avatar')} />

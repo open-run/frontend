@@ -6,6 +6,8 @@ import { MODAL_KEY } from '@constants/modal'
 import DetailModal from './DetailModal'
 import RarityIcon from './shared/RarityIcon'
 
+const FALLBACK_PREVIEW_IMAGE_URL = '/images/avatars/avatar_default_body.png'
+
 export default function AvatarList({
   avatarList,
   selectedAvatar,
@@ -71,7 +73,7 @@ export default function AvatarList({
               <div className='relative aspect-square w-full max-w-80'>
                 <Image
                   alt='아바타 파츠'
-                  src={Array.isArray(avatar.imageUrl) ? avatar.imageUrl[0] : avatar.imageUrl}
+                  src={getPreviewImageUrl(avatar)}
                   loading='lazy'
                   fill
                   sizes='(max-width: 768px) 100vw, 33vw'
@@ -97,7 +99,7 @@ export default function AvatarList({
                     component: (
                       <DetailModal
                         serialNumber={avatar.id}
-                        imageSrc={Array.isArray(avatar.imageUrl) ? avatar.imageUrl[0] : avatar.imageUrl}
+                        imageSrc={getPreviewImageUrl(avatar)}
                         rarity={avatar.rarity}
                         category={avatar.mainCategory}
                         name={avatar.name}
@@ -118,4 +120,14 @@ export default function AvatarList({
       )}
     </section>
   )
+}
+
+function getPreviewImageUrl(avatar: Avatar): string {
+  if (avatar.thumbnailUrl) return avatar.thumbnailUrl
+
+  if (Array.isArray(avatar.imageUrl)) {
+    return avatar.imageUrl.find((imageUrl) => imageUrl != null && imageUrl !== '') ?? FALLBACK_PREVIEW_IMAGE_URL
+  }
+
+  return avatar.imageUrl ?? FALLBACK_PREVIEW_IMAGE_URL
 }
