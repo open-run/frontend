@@ -1,4 +1,4 @@
-import { useQuery } from '@tanstack/react-query'
+import { useQuery, useSuspenseQuery } from '@tanstack/react-query'
 import { QueryOptions } from '@type/react-query'
 import {
   OwnedNftAvatarItemsResponse,
@@ -25,5 +25,21 @@ export function useWearingNftAvatarQuery(options?: QueryOptions<WearingNftAvatar
     staleTime: Infinity,
     gcTime: Infinity,
     ...options,
+  })
+}
+
+export function useSuspenseOwnedNftAvatarItemsQuery() {
+  return useSuspenseQuery({
+    queryKey: OWNED_NFT_AVATAR_ITEMS_QUERY_KEY,
+    queryFn: fetchOwnedNftAvatarItems,
+  })
+}
+
+export function useSuspenseWearingNftAvatarQuery() {
+  return useSuspenseQuery({
+    queryKey: WEARING_NFT_AVATAR_QUERY_KEY,
+    queryFn: fetchWearingNftAvatar,
+    staleTime: Infinity,
+    gcTime: Infinity,
   })
 }

@@ -16,8 +16,8 @@ import { SaveWearingNftAvatarRequest } from '@apis/v1/nft/avatar-items'
 import { useSaveWearingNftAvatarMutation } from '@apis/v1/nft/avatar-items/mutation'
 import {
   WEARING_NFT_AVATAR_QUERY_KEY,
-  useOwnedNftAvatarItemsQuery,
-  useWearingNftAvatarQuery,
+  useSuspenseOwnedNftAvatarItemsQuery,
+  useSuspenseWearingNftAvatarQuery,
 } from '@apis/v1/nft/avatar-items/query'
 import { useUploadProfileImageMutation } from '@apis/v1/users/mutation'
 import { USERINFO_QUERY_KEY } from '@apis/v1/users/query'
@@ -55,8 +55,8 @@ export default function AvatarPage() {
     mainCategory: 'upperClothing',
     subCategory: null,
   })
-  const { data: ownedAvatarItems, isLoading: isOwnedAvatarItemsLoading } = useOwnedNftAvatarItemsQuery()
-  const { data: wearingAvatar, isLoading: isWearingAvatarLoading } = useWearingNftAvatarQuery()
+  const { data: ownedAvatarItems } = useSuspenseOwnedNftAvatarItemsQuery()
+  const { data: wearingAvatar } = useSuspenseWearingNftAvatarQuery()
   const saveWearingAvatarMutation = useSaveWearingNftAvatarMutation()
   const uploadProfileImageMutation = useUploadProfileImageMutation()
   const [isSaving, setIsSaving] = useState(false)
@@ -68,7 +68,6 @@ export default function AvatarPage() {
   }, [wearingAvatar])
 
   const avatarList = ownedAvatarItems?.data ?? []
-  const isLoaded = !isOwnedAvatarItemsLoading && !isWearingAvatarLoading
 
   const filteredAvatarList = avatarList.filter((avatar) => {
     if (selectedCategory.mainCategory === avatar.mainCategory) {
@@ -113,16 +112,6 @@ export default function AvatarPage() {
     } finally {
       setIsSaving(false)
     }
-  }
-
-  if (!isLoaded) {
-    return (
-      <article className='h-full w-full bg-white app:pt-50'>
-        <header className='relative z-20 flex h-60 w-full items-center justify-center bg-white px-5'>
-          <h1 className='text-16 font-bold text-black'>아바타 변경</h1>
-        </header>
-      </article>
-    )
   }
 
   return (
