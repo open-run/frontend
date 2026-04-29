@@ -15,6 +15,12 @@ const nextConfig = {
         pathname: '**',
       },
       {
+        protocol: 'https',
+        hostname: 'gateway.pinata.cloud',
+        port: '',
+        pathname: '/ipfs/**',
+      },
+      {
         protocol: 'http',
         hostname: 'localhost',
         port: '8080',

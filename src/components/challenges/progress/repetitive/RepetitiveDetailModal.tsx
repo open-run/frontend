@@ -8,6 +8,7 @@ import { BrokenXIcon } from '@icons/x'
 import { useRepetitiveChallengeDetail } from '@apis/v1/challenges/repetitive/[challengeId]/query'
 import { MODAL_KEY } from '@constants/modal'
 import { colors } from '@styles/colors'
+import RewardStatus from '../RewardStatus'
 import CircularProgress, { RandomGiftImage, RepeatImage } from '../CircularProgress'
 
 type Stage = {
@@ -17,6 +18,7 @@ type Stage = {
   currentCount: number
   currentProgress: number
   nftCompleted: boolean
+  userChallengeId: number | null
   stageNumber: number
   completedDate: string | null
 }
@@ -57,6 +59,7 @@ export default function RepetitiveChallengeDetail({ challengeId }: { challengeId
         currentCount: totalCurrentCount, // totalCurrentCount를 사용
         currentProgress,
         nftCompleted: tree.nftCompleted,
+        userChallengeId: tree.userChallengeId,
         stageNumber: tree.stageNumber,
         completedDate: tree.completedDate, // 보상받기 버튼 표시를 위해 추가
       }
@@ -200,21 +203,12 @@ export default function RepetitiveChallengeDetail({ challengeId }: { challengeId
 
                           {/* 보상 상태 */}
                           <div className='flex-shrink-0'>
-                            {isCompleted && !stage.nftCompleted && stage.completedDate === null ? (
-                              <button className='h-40 w-70 rounded-8 bg-primary active-press-duration active:scale-98 active:bg-primary-darken'>
-                                <span className='text-14 font-bold text-white'>보상 받기</span>
-                              </button>
-                            ) : isCompleted && stage.nftCompleted ? (
-                              <div className='flex h-40 w-70 items-center justify-center rounded-8 bg-gray-lighten'>
-                                <span className='text-14 font-bold text-gray-darken'>완료</span>
-                              </div>
-                            ) : (
-                              <div className='flex h-40 w-70 items-center justify-center rounded-8 bg-gray-lighten'>
-                                <span className='text-14 text-gray-darken'>
-                                  <span className='font-bold text-primary'>{currentProgress}</span>/{targetCount}
-                                </span>
-                              </div>
-                            )}
+                            <RewardStatus
+                              progress={currentProgress}
+                              total={targetCount}
+                              userChallengeId={stage.userChallengeId}
+                              nftCompleted={stage.nftCompleted}
+                            />
                           </div>
                         </div>
                       )

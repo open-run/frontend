@@ -98,7 +98,9 @@ export default function Header({ isSmallHeaderActive }: { isSmallHeaderActive: b
                 )}
               </AddressClipboard>
             </div>
-            <button className='rounded-8 p-4 active-press-duration active:scale-90 active:bg-gray/20'>
+            <button
+              className='rounded-8 p-4 active-press-duration active:scale-90 active:bg-gray/20'
+              onClick={() => router.push('/notifications')}>
               <BellIcon className='-translate-y-1 translate-x-2' size={24} color={colors.white} />
             </button>
           </div>
@@ -168,7 +170,9 @@ export default function Header({ isSmallHeaderActive }: { isSmallHeaderActive: b
                 )}
               </AddressClipboard>
             </div>
-            <button className='rounded-8 p-4 active-press-duration active:scale-90 active:bg-gray/20'>
+            <button
+              className='rounded-8 p-4 active-press-duration active:scale-90 active:bg-gray/20'
+              onClick={() => router.push('/notifications')}>
               <BellIcon className='-translate-y-1 translate-x-2' size={24} color={colors.white} />
             </button>
           </div>
