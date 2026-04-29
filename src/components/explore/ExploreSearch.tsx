@@ -3,6 +3,7 @@ import Image from 'next/image'
 import Link from 'next/link'
 import { useEffect, useRef, useState } from 'react'
 import { useInView } from 'react-intersection-observer'
+import { BungMember } from '@type/bung'
 import Input from '@shared/Input'
 import { ArrowRightIcon } from '@icons/arrow'
 import { FilledThumbIcon } from '@icons/thumb'
@@ -365,6 +366,7 @@ function ExploreResult({
   mainImage,
   currentMemberCount,
   memberNumber,
+  memberList,
   location,
   startDateTime,
   hashtags,
@@ -376,10 +378,14 @@ function ExploreResult({
   mainImage: string
   currentMemberCount: number
   memberNumber: number
+  memberList: BungMember[]
   location: string
   startDateTime: string
   hashtags: string[]
 }) {
+  const matchedMember = mode === 'member' ? findMatchingMember(memberList, searchKeyword) : null
+  const memberProfileImageUrl = matchedMember?.profileImageUrl || DEFAULT_PROFILE_IMAGE_URL
+
   return (
     <Link className='flex gap-16' href={`/bung/${bungId}`}>
       <div className='relative h-94 w-140 flex-shrink-0'>
@@ -392,8 +398,8 @@ function ExploreResult({
           <div className='absolute bottom-8 right-8 size-24'>
             <Image
               className='size-full object-contain'
-              src={DEFAULT_PROFILE_IMAGE_URL}
-              alt='location'
+              src={memberProfileImageUrl}
+              alt={matchedMember?.nickname ?? 'member'}
               width={24}
               height={24}
             />
@@ -417,6 +423,10 @@ function ExploreResult({
       </div>
     </Link>
   )
+}
+
+function findMatchingMember(memberList: BungMember[], searchKeyword: string) {
+  return memberList.find((member) => member.nickname.includes(searchKeyword)) ?? null
 }
 
 const renderHighlightKeyword = (text: string, keyword: string) => {

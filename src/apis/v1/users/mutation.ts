@@ -1,5 +1,5 @@
 import { useMutation } from '@tanstack/react-query'
-import { deleteUser, register, uploadProfileImage } from './index'
+import { deleteUser, register } from './index'
 
 export function useRegister() {
   return useMutation({
@@ -10,11 +10,5 @@ export function useRegister() {
 export function useDeleteUser() {
   return useMutation({
     mutationFn: deleteUser,
-  })
-}
-
-export function useUploadProfileImageMutation() {
-  return useMutation({
-    mutationFn: uploadProfileImage,
   })
 }

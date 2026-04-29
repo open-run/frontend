@@ -13,13 +13,12 @@ import { TransparentOpenrunIcon } from '@icons/openrun'
 import { ResetIcon } from '@icons/reset'
 import { BUNGS_QUERY_KEY } from '@apis/v1/bungs/query'
 import { SaveWearingNftAvatarRequest } from '@apis/v1/nft/avatar-items'
-import { useSaveWearingNftAvatarMutation } from '@apis/v1/nft/avatar-items/mutation'
+import { useSaveWearingNftAvatarWithProfileImageMutation } from '@apis/v1/nft/avatar-items/mutation'
 import {
   WEARING_NFT_AVATAR_QUERY_KEY,
   useSuspenseOwnedNftAvatarItemsQuery,
   useSuspenseWearingNftAvatarQuery,
 } from '@apis/v1/nft/avatar-items/query'
-import { useUploadProfileImageMutation } from '@apis/v1/users/mutation'
 import { USERINFO_QUERY_KEY } from '@apis/v1/users/query'
 import { MODAL_KEY } from '@constants/modal'
 import { colors } from '@styles/colors'
@@ -57,8 +56,7 @@ export default function AvatarPage() {
   })
   const { data: ownedAvatarItems } = useSuspenseOwnedNftAvatarItemsQuery()
   const { data: wearingAvatar } = useSuspenseWearingNftAvatarQuery()
-  const saveWearingAvatarMutation = useSaveWearingNftAvatarMutation()
-  const uploadProfileImageMutation = useUploadProfileImageMutation()
+  const saveWearingAvatarWithProfileImageMutation = useSaveWearingNftAvatarWithProfileImageMutation()
   const [isSaving, setIsSaving] = useState(false)
 
   useEffect(() => {
@@ -92,10 +90,11 @@ export default function AvatarPage() {
     setIsSaving(true)
 
     try {
-      const { data } = await saveWearingAvatarMutation.mutateAsync(toSaveWearingAvatarRequest(selectedAvatar))
       const profileImage = await captureAvatarProfileImage(avatarRef.current)
-
-      await uploadProfileImageMutation.mutateAsync(profileImage)
+      const { data } = await saveWearingAvatarWithProfileImageMutation.mutateAsync({
+        wearingAvatar: toSaveWearingAvatarRequest(selectedAvatar),
+        profileImage,
+      })
       setSelectedAvatar(data)
 
       await Promise.all([
@@ -126,7 +125,7 @@ export default function AvatarPage() {
         <h1 className='text-16 font-bold text-black'>아바타 변경</h1>
         <button
           className='absolute right-16 translate-x-8 rounded-8 px-8 py-4 active-press-duration active:scale-90 active:bg-gray/50'
-          disabled={isSaving || saveWearingAvatarMutation.isPending || uploadProfileImageMutation.isPending}
+          disabled={isSaving || saveWearingAvatarWithProfileImageMutation.isPending}
           onClick={handleSave}>
           <span className='text-14 text-black'>저장</span>
         </button>
