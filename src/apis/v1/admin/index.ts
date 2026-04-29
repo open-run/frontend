@@ -1,6 +1,6 @@
 import http from '@apis/axios'
 import { ApiResponse } from '@apis/type'
-import { MainCategory, Rarity, SubCategory } from '@type/avatar'
+import { Avatar, MainCategory, Rarity, SubCategory } from '@type/avatar'
 
 export type AdminMe = {
   admin: boolean
@@ -39,6 +39,7 @@ export type AdminNftGrantResult = {
 export type AdminMeResponse = ApiResponse<AdminMe>
 export type AdminUsersResponse = ApiResponse<AdminUser[]>
 export type AdminNftAvatarItemsResponse = ApiResponse<AdminNftAvatarItem[]>
+export type AdminNftAvatarTryOnItemsResponse = ApiResponse<Avatar[]>
 export type AdminNftGrantResponse = ApiResponse<AdminNftGrantResult>
 
 export function fetchAdminMe(): Promise<AdminMeResponse> {
@@ -51,6 +52,10 @@ export function fetchAdminUsers(): Promise<AdminUsersResponse> {
 
 export function fetchAdminNftAvatarItems(): Promise<AdminNftAvatarItemsResponse> {
   return http.get('/v1/admin/nft/avatar-items')
+}
+
+export function fetchAdminNftAvatarTryOnItems(): Promise<AdminNftAvatarTryOnItemsResponse> {
+  return http.get('/v1/admin/nft/avatar-items/try-on')
 }
 
 export function grantAdminNftAvatarItem(

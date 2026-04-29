@@ -17,9 +17,10 @@ import { MainCategory, SubCategory } from '@type/avatar'
 import RarityIcon from '@components/avatar/shared/RarityIcon'
 import LoadingLogo from '@shared/LoadingLogo'
 import { Dimmed, Popup } from '@shared/Modal'
+import AdminAvatarTryOnPanel from './AdminAvatarTryOnPanel'
 
 const FALLBACK_THUMBNAIL_URL = '/images/avatars/avatar_default_body.png'
-type AdminMenuKey = 'grant' | 'mint' | 'challenge'
+type AdminMenuKey = 'grant' | 'avatarTryOn' | 'mint' | 'challenge'
 type AdminCategoryFilterKey =
   | 'all'
   | 'upperClothing'
@@ -59,11 +60,12 @@ export default function AdminPage() {
 
   const adminMeQuery = useAdminMeQuery()
   const isAdmin = adminMeQuery.data?.data.admin === true
+  const isGrantMenu = activeMenu === 'grant'
   const adminUsersQuery = useAdminUsersQuery({
-    enabled: isAdmin,
+    enabled: isAdmin && isGrantMenu,
   })
   const nftAvatarItemsQuery = useAdminNftAvatarItemsQuery({
-    enabled: isAdmin,
+    enabled: isAdmin && isGrantMenu,
   })
   const grantMutation = useGrantAdminNftAvatarItemMutation()
 
@@ -195,6 +197,8 @@ export default function AdminPage() {
               )}
             </section>
           </section>
+        ) : activeMenu === 'avatarTryOn' ? (
+          <AdminAvatarTryOnPanel />
         ) : (
           <ComingSoonPanel title={activeMenu === 'mint' ? 'NFT 신규 민팅' : '도전과제 컨텐츠'} />
         )}
@@ -222,6 +226,7 @@ function AdminMenu({
 }) {
   const menuItems: { key: AdminMenuKey; label: string }[] = [
     { key: 'grant', label: 'NFT 부여' },
+    { key: 'avatarTryOn', label: '아바타 장착' },
     { key: 'mint', label: 'NFT 신규 민팅' },
     { key: 'challenge', label: '도전과제 컨텐츠' },
   ]
