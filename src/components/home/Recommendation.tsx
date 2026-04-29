@@ -35,6 +35,7 @@ function RecommendationBungs() {
             time={bung.startDateTime}
             remainingCount={bung.memberNumber - bung.memberList.length}
             hashtags={bung.hashtags}
+            participantImageUrls={bung.memberList.map((member) => member.profileImageUrl)}
           />
         </Link>
       ))}

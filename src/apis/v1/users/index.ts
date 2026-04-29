@@ -23,6 +23,14 @@ export function fetchUserInfo(): Promise<FetchUserInfoResponseType> {
   return http.get('/v1/users')
 }
 
+export function uploadProfileImage(image: Blob): Promise<FetchUserInfoResponseType> {
+  const formData = new FormData()
+  const file = image instanceof File ? image : new File([image], 'profile.png', { type: 'image/png' })
+  formData.append('image', file)
+
+  return http.put('/v1/users/profile-image', formData)
+}
+
 export function deleteUser() {
   return http.delete('/v1/users')
 }

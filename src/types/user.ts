@@ -10,4 +10,5 @@ export type UserInfo = {
   blockchainAddress: string
   runningPace: string
   runningFrequency: number
+  profileImageUrl: string | null
 }

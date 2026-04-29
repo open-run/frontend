@@ -22,7 +22,7 @@ export type BungMember = {
   userId: string
   nickname: string
   email: string
-  profileImageUrl: string
+  profileImageUrl: string | null
   likeCount: number
   participationStatus: boolean
   owner: boolean

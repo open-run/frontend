@@ -11,6 +11,7 @@ import { useInfiniteSearchBungByHashtag } from '@apis/v1/bungs/hashtag/query'
 import { useInfiniteSearchBungByLocation } from '@apis/v1/bungs/location/query'
 import { useInfiniteSearchBungByNickname } from '@apis/v1/bungs/nickname/query'
 import { formatDate } from '@utils/time'
+import { DEFAULT_PROFILE_IMAGE_URL } from '@constants/profile'
 import { colors } from '@styles/colors'
 
 type Tab = '전체' | '멤버' | '해시태그' | '위치'
@@ -200,13 +201,15 @@ function SearchMember({ searchKeyword }: { searchKeyword: string }) {
     <>
       {targetMember != null && (
         <div className='mb-16 flex items-center'>
-          <Image
-            className='rounded-full'
-            src={targetMember.profileImageUrl || '/temp/nft_profile_avatar.png'}
-            alt={targetMember.nickname}
-            width={76}
-            height={76}
-          />
+          <div className='size-[76px] shrink-0'>
+            <Image
+              className='size-full object-contain'
+              src={targetMember.profileImageUrl || DEFAULT_PROFILE_IMAGE_URL}
+              alt={targetMember.nickname}
+              width={76}
+              height={76}
+            />
+          </div>
           <div className='ml-12'>
             <p className='mb-2 text-20 font-bold'>{targetMember.nickname}</p>
             <p className='flex items-center gap-4 font-jost text-16 font-black italic'>
@@ -386,13 +389,15 @@ function ExploreResult({
           <span className='text-12 tracking-[1px] text-gray-darken'>/{memberNumber}</span>
         </div>
         {mode === 'member' && (
-          <Image
-            className='absolute bottom-8 right-8 rounded-full'
-            src={'/temp/nft_profile_avatar.png'}
-            alt='location'
-            width={24}
-            height={24}
-          />
+          <div className='absolute bottom-8 right-8 size-24'>
+            <Image
+              className='size-full object-contain'
+              src={DEFAULT_PROFILE_IMAGE_URL}
+              alt='location'
+              width={24}
+              height={24}
+            />
+          </div>
         )}
       </div>
       <div className='flex flex-col pt-8'>
