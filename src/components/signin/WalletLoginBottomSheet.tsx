@@ -73,7 +73,7 @@ type ExternalWalletConnection = {
 
 type SocialConnectionState = {
   provider: SocialProvider
-  popupBlocked: boolean
+  mode: 'popup' | 'redirect'
   errorMessage: string | null
 }
 
@@ -365,7 +365,7 @@ export default function WalletLoginBottomSheet({
       connectionSettledRef.current = false
       setSelectedAction(provider)
       setSelectedDirectoryWalletId(null)
-      setSocialConnection({ provider, popupBlocked: popup == null, errorMessage: null })
+      setSocialConnection({ provider, mode: popup == null ? 'redirect' : 'popup', errorMessage: null })
       setErrorMessage(null)
       setView('socialWallet')
       onConnectStart()
@@ -386,7 +386,7 @@ export default function WalletLoginBottomSheet({
         setSelectedAction(null)
         setSocialConnection({
           provider,
-          popupBlocked: false,
+          mode: 'popup',
           errorMessage: '소셜 로그인 설정을 찾지 못했어요. 다시 시도해 주세요.',
         })
         onConnectError()
@@ -410,7 +410,7 @@ export default function WalletLoginBottomSheet({
           setSelectedAction(null)
           setSocialConnection({
             provider,
-            popupBlocked: false,
+            mode: 'redirect',
             errorMessage: '소셜 로그인 페이지로 이동하지 못했어요. 다시 시도해 주세요.',
           })
           onConnectError()
@@ -452,7 +452,7 @@ export default function WalletLoginBottomSheet({
           setSelectedAction(null)
           setSocialConnection({
             provider,
-            popupBlocked: false,
+            mode: 'popup',
             errorMessage: '로그인을 완료하지 못했어요. 다시 시도해 주세요.',
           })
           onConnectError()
@@ -467,7 +467,7 @@ export default function WalletLoginBottomSheet({
         setSelectedAction(null)
         setSocialConnection({
           provider,
-          popupBlocked: false,
+          mode: 'popup',
           errorMessage: '로그인 시간이 초과됐어요. 다시 시도해 주세요.',
         })
         onConnectError()
@@ -489,7 +489,7 @@ export default function WalletLoginBottomSheet({
         setSelectedAction(null)
         setSocialConnection({
           provider,
-          popupBlocked: false,
+          mode: 'popup',
           errorMessage: '소셜 로그인 창을 열지 못했어요. 다시 시도해 주세요.',
         })
         onConnectError()
@@ -1067,17 +1067,18 @@ function SocialWalletContent({
   onRetry: () => void
 }) {
   const option = getSocialOption(socialConnection.provider)
-  const isBlocked = socialConnection.popupBlocked
   const hasError = socialConnection.errorMessage != null
-  const title = isBlocked
-    ? '팝업이 차단됐어요'
-    : hasError
+  const isSameTabRedirect = socialConnection.mode === 'redirect' && !hasError
+  const title = hasError
       ? '로그인을 완료하지 못했어요'
+      : isSameTabRedirect
+        ? `${option?.label ?? '소셜'} 로그인 페이지로 이동 중`
       : `${option?.label ?? '소셜'} 로그인 진행 중`
   const description =
     socialConnection.errorMessage ??
-    `${option?.label ?? '소셜'} 인증 창에서 로그인을 완료해 주세요. 이 화면은 인증 결과를 기다리고 있어요.`
-  const buttonLabel = isBlocked ? '팝업 허용 후 다시 시도' : '로그인 창 다시 열기'
+    (isSameTabRedirect
+      ? '곧 인증 페이지로 이동해요. 이동하지 않으면 다시 시도해 주세요.'
+      : `${option?.label ?? '소셜'} 인증 창에서 로그인을 완료해 주세요. 이 화면은 인증 결과를 기다리고 있어요.`)
 
   return (
     <div className='flex min-h-0 flex-1 flex-col items-center justify-between gap-16 overflow-hidden'>
@@ -1086,7 +1087,7 @@ function SocialWalletContent({
           <span className={clsx('flex h-62 w-62 items-center justify-center rounded-18', option?.iconBackground, option?.iconClassName)}>
             {option?.icon}
           </span>
-          {!isBlocked && !hasError && (
+          {!hasError && (
             <span className='absolute -bottom-6 -right-6 flex h-26 w-26 items-center justify-center rounded-full bg-white shadow-[0_2px_10px_rgba(0,0,0,0.16)]'>
               <LoadingSpinner />
             </span>
@@ -1099,11 +1100,11 @@ function SocialWalletContent({
         </div>
       </div>
 
-      {(isBlocked || hasError) && (
+      {hasError && (
         <button
           className='flex h-48 w-full items-center justify-center rounded-16 bg-[#F2F3F5] text-15 font-semibold text-black-darken active-press-duration active:bg-gray/80'
           onClick={onRetry}>
-          {buttonLabel}
+          다시 시도
         </button>
       )}
     </div>
