@@ -1,5 +1,6 @@
-export const REOWN_PROJECT_ID =
-  process.env.NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID || 'ad41cd1ed822293016042e1a5bc4b5f2'
+const walletConnectProjectId = process.env.NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID?.trim()
+
+export const REOWN_PROJECT_ID = walletConnectProjectId || 'ad41cd1ed822293016042e1a5bc4b5f2'
 
 export const WALLET_ID_METAMASK = 'c57ca95b47569778a828d19178114f4db188b89b763c899ba0be274e97267d96'
 export const WALLET_ID_TRUST_WALLET = '4622a2b2d6af1c9844944291e5e7351a6aa24cd7b23099efac1b2fd875da31a0'
