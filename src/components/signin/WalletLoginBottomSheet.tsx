@@ -97,7 +97,7 @@ type WalletLoginBottomSheetProps = {
   onCancel: () => void
 }
 
-const CONNECT_SHEET_HEIGHT = 'min(680px, calc(100dvh - 24px))'
+const CONNECT_SHEET_HEIGHT = 'min(616px, calc(100dvh - 24px))'
 const SEARCH_SHEET_HEIGHT = 'min(720px, calc(100dvh - 24px))'
 const WALLET_CONNECT_SHEET_HEIGHT = 'min(620px, calc(100dvh - 24px))'
 const EXTERNAL_WALLET_SHEET_HEIGHT = 'min(520px, calc(100dvh - 24px))'
