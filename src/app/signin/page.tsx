@@ -11,6 +11,7 @@ export default function SignInPage() {
         className='absolute z-0 object-cover'
         src='/images/bg_signin.png'
         priority
+        unoptimized
         fill
         sizes='(max-width: 768px) 100vw, 33vw'
         alt='배경 이미지'
