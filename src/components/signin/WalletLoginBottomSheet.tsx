@@ -25,6 +25,12 @@ import { ArrowLeftIcon } from '@icons/arrow'
 import { BrokenXIcon } from '@icons/x'
 import { MagnifierIcon } from '@icons/magnifier'
 import { MODAL_KEY } from '@constants/modal'
+import {
+  WALLET_ID_BINANCE_WALLET,
+  WALLET_ID_COINBASE_WALLET,
+  WALLET_ID_METAMASK,
+  WALLET_ID_TRUST_WALLET,
+} from '@constants/wallet'
 import { colors } from '@styles/colors'
 
 type SheetView = 'connect' | 'allWallets' | 'walletConnect' | 'externalWallet'
@@ -58,6 +64,11 @@ type ExternalWalletConnection = {
 
 type FeaturedWalletMap = Partial<Record<string, WcWallet>>
 type WalletImageMap = Partial<Record<string, string>>
+type FeaturedWalletMetadataState = {
+  wallets: FeaturedWalletMap
+  hasError: boolean
+  retry: () => void
+}
 
 type WalletLoginBottomSheetProps = {
   onConnectStart: () => void
@@ -66,10 +77,6 @@ type WalletLoginBottomSheetProps = {
   onCancel: () => void
 }
 
-const WALLET_ID_METAMASK = 'c57ca95b47569778a828d19178114f4db188b89b763c899ba0be274e97267d96'
-const WALLET_ID_TRUST_WALLET = '4622a2b2d6af1c9844944291e5e7351a6aa24cd7b23099efac1b2fd875da31a0'
-const WALLET_ID_BINANCE_WALLET = 'c03dfee351b6fcc421b4494ea33b9d4b5a73a16eb3a21e3e44f81d2fde2c1e4e'
-const WALLET_ID_COINBASE_WALLET = 'fd20dc426fb37566d803205b19bbc1d4096b248ac04548e3cfb6b3a38bd033aa'
 const CONNECT_SHEET_HEIGHT = 'min(680px, calc(100dvh - 24px))'
 const SEARCH_SHEET_HEIGHT = 'min(720px, calc(100dvh - 24px))'
 const WALLET_CONNECT_SHEET_HEIGHT = 'min(620px, calc(100dvh - 24px))'
@@ -143,7 +150,8 @@ export default function WalletLoginBottomSheet({
   onCancel,
 }: WalletLoginBottomSheetProps) {
   const { closeModal } = useModal()
-  const featuredWallets = useReownFeaturedWallets(FEATURED_WALLET_OPTIONS)
+  const featuredWalletMetadata = useReownFeaturedWallets(FEATURED_WALLET_OPTIONS)
+  const featuredWallets = featuredWalletMetadata.wallets
   const walletImages = useMemo(() => getWalletImagesFromMap(featuredWallets), [featuredWallets])
   const sheetRef = useRef<BottomSheetRef>(null)
   const shouldCancelOnCloseRef = useRef(true)
@@ -499,8 +507,10 @@ export default function WalletLoginBottomSheet({
                 selectedAction={selectedAction}
                 isPending={isPending}
                 walletImages={walletImages}
+                hasMetadataError={featuredWalletMetadata.hasError}
                 onSelect={handleSelectFeaturedWallet}
                 onOpenWalletConnect={handleOpenWalletConnect}
+                onRetryMetadata={featuredWalletMetadata.retry}
                 onShowAllWallets={() => {
                   setErrorMessage(null)
                   setView('allWallets')
@@ -621,15 +631,19 @@ function WalletOptions({
   selectedAction,
   isPending,
   walletImages,
+  hasMetadataError,
   onSelect,
   onOpenWalletConnect,
+  onRetryMetadata,
   onShowAllWallets,
 }: {
   selectedAction: ConnectActionId | null
   isPending: boolean
   walletImages: WalletImageMap
+  hasMetadataError: boolean
   onSelect: (option: FeaturedWalletOption) => void
   onOpenWalletConnect: () => void
+  onRetryMetadata: () => void
   onShowAllWallets: () => void
 }) {
   const isAnyDisabled = selectedAction != null || isPending
@@ -664,6 +678,10 @@ function WalletOptions({
         disabled={selectedAction != null || isPending}
         onClick={onShowAllWallets}
       />
+
+      {hasMetadataError && (
+        <InlineRetryMessage message='지갑 정보를 불러오지 못했어요.' onRetry={onRetryMetadata} />
+      )}
     </div>
   )
 }
@@ -697,6 +715,19 @@ function WalletRow({
       <span className='min-w-0 flex-1 truncate text-16 font-medium text-black-darken'>{label}</span>
       {badge != null && <span className='rounded-7 bg-[#E7F2FF] px-7 py-3 text-12 font-medium text-[#1283F8]'>{badge}</span>}
     </button>
+  )
+}
+
+function InlineRetryMessage({ message, onRetry }: { message: string; onRetry: () => void }) {
+  return (
+    <div className='flex items-center justify-between gap-10 rounded-14 bg-gray-lighten px-12 py-10'>
+      <span className='min-w-0 text-12 font-semibold text-gray-darker'>{message}</span>
+      <button
+        className='shrink-0 rounded-8 bg-white px-9 py-5 text-12 font-semibold text-primary active-press-duration active:bg-gray/60'
+        onClick={onRetry}>
+        다시 시도
+      </button>
+    </div>
   )
 }
 
@@ -916,7 +947,7 @@ function AllWalletsContent({
   const sentinelRef = useRef<HTMLDivElement>(null)
   const [query, setQuery] = useState('')
   const [badge, setBadge] = useState<WalletBadge>(undefined)
-  const { wallets, isLoading, isLoadingMore, canLoadMore, loadMore } = useReownWalletDirectory({
+  const { wallets, isLoading, isLoadingMore, canLoadMore, loadMore, errorMessage, retry } = useReownWalletDirectory({
     enabled: true,
     query,
     badge,
@@ -1000,7 +1031,13 @@ function AllWalletsContent({
           )}
         </div>
 
-        {!shouldShowSkeletonGrid && wallets.length === 0 && (
+        {!shouldShowSkeletonGrid && errorMessage != null && (
+          <div className='mt-10'>
+            <InlineRetryMessage message={errorMessage} onRetry={retry} />
+          </div>
+        )}
+
+        {!shouldShowSkeletonGrid && errorMessage == null && wallets.length === 0 && (
           <div className='mt-10 flex h-96 items-center justify-center rounded-18 bg-[#F2F3F5] text-14 font-medium text-gray-darker'>
             No Wallet found
           </div>
@@ -1135,9 +1172,12 @@ function LoadingSpinner({ size = 'default' }: { size?: 'default' | 'large' }) {
   )
 }
 
-function useReownFeaturedWallets(wallets: FeaturedWalletOption[]) {
+function useReownFeaturedWallets(wallets: FeaturedWalletOption[]): FeaturedWalletMetadataState {
   const walletIds = useMemo(() => wallets.map((wallet) => wallet.walletId), [wallets])
   const [walletMap, setWalletMap] = useState<FeaturedWalletMap>({})
+  const [hasError, setHasError] = useState(false)
+  const [retryCount, setRetryCount] = useState(0)
+  const retry = useCallback(() => setRetryCount((prev) => prev + 1), [])
 
   useEffect(() => {
     let cancelled = false
@@ -1164,10 +1204,12 @@ function useReownFeaturedWallets(wallets: FeaturedWalletOption[]) {
 
         if (!cancelled) {
           setWalletMap(featuredWallets)
+          setHasError(data.length < walletIds.length)
         }
       } catch {
         if (!cancelled) {
           setWalletMap({})
+          setHasError(true)
         }
       }
     }
@@ -1177,9 +1219,9 @@ function useReownFeaturedWallets(wallets: FeaturedWalletOption[]) {
     return () => {
       cancelled = true
     }
-  }, [walletIds])
+  }, [retryCount, walletIds])
 
-  return walletMap
+  return { wallets: walletMap, hasError, retry }
 }
 
 function getWalletImagesFromMap(wallets: FeaturedWalletMap) {
@@ -1348,6 +1390,8 @@ function useReownWalletDirectory({
   const [isSearchLoading, setIsSearchLoading] = useState(false)
   const [isLoadingMore, setIsLoadingMore] = useState(false)
   const [isExhausted, setIsExhausted] = useState(false)
+  const [errorMessage, setErrorMessage] = useState<string | null>(null)
+  const [retryCount, setRetryCount] = useState(0)
   const loadMoreInFlightRef = useRef(false)
   const lastRequestedPageRef = useRef(ApiController.state.page)
   const loadMoreCooldownUntilRef = useRef(0)
@@ -1355,6 +1399,10 @@ function useReownWalletDirectory({
 
   const searchQuery = query.trim()
   const isSearchMode = searchQuery.length >= 2 || badge != null
+  const retry = useCallback(() => {
+    setErrorMessage(null)
+    setRetryCount((prev) => prev + 1)
+  }, [])
 
   useEffect(() => {
     if (!enabled) return
@@ -1384,12 +1432,18 @@ function useReownWalletDirectory({
 
     async function initializeWalletDirectory() {
       setIsInitialLoading(true)
+      setErrorMessage(null)
       try {
         setIsExhausted(false)
         ConnectorController.setFilterByNamespace('eip155')
         await ApiController.prefetch({ fetchConnectorImages: false, fetchNetworkImages: false })
         if (ApiController.state.wallets.length === 0) {
           await ApiController.fetchWalletsByPage({ page: 1 })
+        }
+      } catch {
+        if (!cancelled) {
+          setIsExhausted(true)
+          setErrorMessage('지갑 목록을 불러오지 못했어요.')
         }
       } finally {
         if (!cancelled) {
@@ -1405,7 +1459,7 @@ function useReownWalletDirectory({
     return () => {
       cancelled = true
     }
-  }, [enabled])
+  }, [enabled, retryCount])
 
   useEffect(() => {
     if (!enabled) return
@@ -1413,6 +1467,7 @@ function useReownWalletDirectory({
     if (!isSearchMode) {
       searchRequestIdRef.current += 1
       setIsSearchLoading(false)
+      setErrorMessage(null)
       return
     }
 
@@ -1420,18 +1475,22 @@ function useReownWalletDirectory({
     const requestId = searchRequestIdRef.current + 1
     searchRequestIdRef.current = requestId
     setIsSearchLoading(true)
+    setErrorMessage(null)
 
     const timeoutId = window.setTimeout(async () => {
       let nextState = readWalletDirectoryState()
+      let nextErrorMessage: string | null = null
 
       try {
         await ApiController.searchWallet({ search: searchQuery, badge })
         nextState = readWalletDirectoryState()
       } catch {
         nextState = { ...readWalletDirectoryState(), search: [] }
+        nextErrorMessage = '지갑 검색 결과를 불러오지 못했어요.'
       } finally {
         if (!cancelled && requestId === searchRequestIdRef.current) {
           setIsSearchLoading(false)
+          setErrorMessage(nextErrorMessage)
           setApiState(nextState)
         }
       }
@@ -1441,7 +1500,7 @@ function useReownWalletDirectory({
       cancelled = true
       window.clearTimeout(timeoutId)
     }
-  }, [badge, enabled, isSearchMode, searchQuery])
+  }, [badge, enabled, isSearchMode, retryCount, searchQuery])
 
   const wallets = useMemo(() => {
     if (isSearchMode) {
@@ -1489,6 +1548,7 @@ function useReownWalletDirectory({
     } catch {
       lastRequestedPageRef.current = ApiController.state.page
       loadMoreCooldownUntilRef.current = Date.now() + 1500
+      setErrorMessage('지갑 목록을 더 불러오지 못했어요.')
     } finally {
       loadMoreInFlightRef.current = false
       setIsLoadingMore(false)
@@ -1501,7 +1561,9 @@ function useReownWalletDirectory({
     isLoading: isInitialLoading || isSearchLoading,
     isLoadingMore,
     canLoadMore,
+    errorMessage,
     loadMore,
+    retry,
   }
 }
 
