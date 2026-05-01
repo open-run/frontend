@@ -34,9 +34,14 @@ import {
   WALLET_ID_TRUST_WALLET,
 } from '@constants/wallet'
 import { colors } from '@styles/colors'
+import {
+  buildReownSocialRedirectUri,
+  storePendingReownSocialProvider,
+  type ReownSocialProvider,
+} from '@utils/reownSocialRedirect'
 
 type SheetView = 'connect' | 'allWallets' | 'walletConnect' | 'externalWallet' | 'socialWallet'
-type SocialProvider = 'google' | 'x' | 'discord' | 'apple' | 'github'
+type SocialProvider = ReownSocialProvider
 type FeaturedWalletActionId = 'metamask' | 'trust' | 'binance' | 'coinbase'
 type ConnectActionId = SocialProvider | FeaturedWalletActionId | 'directoryWallet' | 'walletConnect'
 type WalletBadge = Extract<BadgeType, 'certified'> | undefined
@@ -368,22 +373,12 @@ export default function WalletLoginBottomSheet({
       const requestId = socialRequestIdRef.current + 1
       socialRequestIdRef.current = requestId
 
-      if (popup == null) {
-        onConnectError()
-        setSocialConnection({
-          provider,
-          popupBlocked: true,
-          errorMessage: '팝업이 차단됐어요. 브라우저에서 팝업을 허용한 뒤 다시 시도해 주세요.',
-        })
-        return
-      }
-
       const authConnector = ConnectorController.getAuthConnector() as SocialAuthConnector | undefined
       const getSocialRedirectUri = authConnector?.provider?.getSocialRedirectUri
 
       if (authConnector == null || getSocialRedirectUri == null) {
         try {
-          popup.close()
+          popup?.close()
         } catch {
           // Ignore popup cleanup failures from cross-origin handles.
         }
@@ -395,6 +390,32 @@ export default function WalletLoginBottomSheet({
           errorMessage: '소셜 로그인 설정을 찾지 못했어요. 다시 시도해 주세요.',
         })
         onConnectError()
+        return
+      }
+
+      if (popup == null) {
+        try {
+          const { uri } = await getSocialRedirectUri.call(authConnector.provider, { provider })
+
+          if (requestId !== socialRequestIdRef.current) return
+
+          if (uri == null) {
+            throw new Error('Missing social redirect uri')
+          }
+
+          storePendingReownSocialProvider(provider)
+          window.location.assign(buildReownSocialRedirectUri(uri))
+        } catch {
+          if (requestId !== socialRequestIdRef.current) return
+          setSelectedAction(null)
+          setSocialConnection({
+            provider,
+            popupBlocked: false,
+            errorMessage: '소셜 로그인 페이지로 이동하지 못했어요. 다시 시도해 주세요.',
+          })
+          onConnectError()
+        }
+
         return
       }
 

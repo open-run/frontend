@@ -3,6 +3,14 @@
 import { MODAL_KEY } from '@/constants/modal'
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { useAppKitAccount, useAppKitState, useDisconnect } from '@reown/appkit/react'
+import {
+  AccountController,
+  ChainController,
+  ConnectionController,
+  ConnectorController,
+  StorageUtil,
+  type Connector,
+} from '@reown/appkit-controllers'
 import { useModal } from '@contexts/ModalProvider'
 import { useAppStore } from '@store/app'
 import { SmartWalletConnectResponse } from '@type/app'
@@ -13,8 +21,15 @@ import { useSmartWalletLogin } from '@apis/v1/users/login/smart_wallet/mutation'
 import { removeCookie } from '@utils/cookie'
 import { MESSAGE } from '@constants/app'
 import { COOKIE } from '@constants/cookie'
+import { consumePendingReownSocialProvider, hasPendingReownSocialRedirect, type ReownSocialProvider } from '@utils/reownSocialRedirect'
 import DontWorryModal from './DontWorryModal'
 import WalletLoginBottomSheet from './WalletLoginBottomSheet'
+
+type SocialAuthConnector = Connector & {
+  provider?: {
+    getSocialRedirectUri?: (params: { provider: ReownSocialProvider }) => Promise<{ uri?: string }>
+  }
+}
 
 export default function Signin() {
   const { isApp } = useAppStore()
@@ -115,9 +130,55 @@ function SignInBrowser() {
 
   useEffect(() => {
     removeCookie(COOKIE.ACCESSTOKEN)
-    void disconnect({ namespace: 'eip155' })
+    if (!hasPendingReownSocialRedirect()) {
+      void disconnect({ namespace: 'eip155' })
+    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
+
+  useEffect(() => {
+    let cancelled = false
+
+    async function connectSocialRedirect() {
+      const url = new URL(window.location.href)
+      const resultUri = url.searchParams.get('result_uri')
+      const socialProvider = consumePendingReownSocialProvider()
+
+      if (resultUri == null || socialProvider == null) {
+        return
+      }
+
+      hasRequestedLoginRef.current = true
+      hasObservedModalOpenRef.current = false
+      setIsLoading(true)
+      url.searchParams.delete('result_uri')
+      window.history.replaceState({}, document.title, url.toString())
+
+      try {
+        const authConnector = await waitForAuthConnector(() => cancelled)
+
+        if (cancelled) return
+
+        AccountController.setSocialProvider(socialProvider, ChainController.state.activeChain)
+        await ConnectionController.connectExternal(
+          { id: authConnector.id, type: authConnector.type, socialUri: resultUri },
+          authConnector.chain,
+        )
+        StorageUtil.setConnectedSocialProvider(socialProvider as Parameters<typeof StorageUtil.setConnectedSocialProvider>[0])
+        await ConnectionController.connectExternal(authConnector, authConnector.chain)
+      } catch {
+        if (!cancelled) {
+          stopWalletConnect()
+        }
+      }
+    }
+
+    void connectSocialRedirect()
+
+    return () => {
+      cancelled = true
+    }
+  }, [stopWalletConnect])
 
   useEffect(() => {
     if (!hasRequestedLoginRef.current || !isConnected || !address) {
@@ -186,4 +247,22 @@ function DontWorryGuide() {
       <span className='text-12'>월렛 로그인, 안심하고 진행하세요!</span>
     </button>
   )
+}
+
+async function waitForAuthConnector(isCancelled: () => boolean) {
+  for (let i = 0; i < 20; i += 1) {
+    const authConnector = ConnectorController.getAuthConnector() as SocialAuthConnector | undefined
+
+    if (authConnector != null) {
+      return authConnector
+    }
+
+    if (isCancelled()) {
+      break
+    }
+
+    await new Promise((resolve) => window.setTimeout(resolve, 250))
+  }
+
+  throw new Error('Social auth connector not found')
 }
