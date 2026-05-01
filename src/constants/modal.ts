@@ -16,5 +16,6 @@ export const MODAL_KEY = {
   SETTING: 'setting',
   DELETE_USER: 'delete-user',
   DONT_WORRY: 'dont-worry',
+  WALLET_LOGIN: 'wallet-login',
   REPETITIVE_CHALLENGE_DETAIL: 'repetitive-challenge-detail',
 } as const

@@ -32,7 +32,7 @@
 |----------|------|
 | **Framework** | Next.js 15 (App Router), React 19 |
 | **Language** | TypeScript 5 |
-| **Web3** | wagmi 2, viem 2, @coinbase/onchainkit |
+| **Web3** | wagmi 2, viem 2, Reown AppKit / WalletConnect |
 | **State** | Zustand, @tanstack/react-query 5, nuqs (URL state) |
 | **Styling** | Tailwind CSS 3, Framer Motion |
 | **Maps** | @vis.gl/react-google-maps |
@@ -88,9 +88,9 @@ python3 scripts/chat_bff_smoke.py --rounds 2
 
 | 변수명 | 설명 | 발급처 |
 |--------|------|--------|
-| `NEXT_PUBLIC_API_SERVER_URL` | 백엔드 API 서버 | 팀 내부 |
-| `NEXT_PUBLIC_ONCHAINKIT_API_KEY` | Coinbase OnChainKit | [Coinbase Developer Portal](https://portal.cdp.coinbase.com/) |
-| `NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID` | WalletConnect | [WalletConnect Cloud](https://cloud.walletconnect.com/) |
+| `NEXT_PUBLIC_API_SERVER_URL` | 백엔드 API 서버 URL | 팀 내부 |
+| `NEXT_PUBLIC_GOOGLE_MAPS_API_KEY` | Google Maps (지도 렌더링) | [Google Cloud Console](https://console.cloud.google.com/apis/credentials) |
+| `NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID` | Reown AppKit / WalletConnect | [Reown Cloud](https://cloud.reown.com/) |
 
 #### Server-side (서버에서만 사용 — 브라우저에 노출되지 않음)
 
@@ -154,7 +154,7 @@ src/
 ### 인증 흐름
 
 ```
-Smart Wallet 서명 → JWT 토큰 발급 → 쿠키 저장 → 미들웨어가 보호 라우트 자동 리다이렉트
+WalletConnect/AppKit 주소 연결 → 백엔드에서 JWT 발급 → 쿠키 저장 → 미들웨어가 보호 라우트 가드
 ```
 
 ### API 3중 구조

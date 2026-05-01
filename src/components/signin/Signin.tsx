@@ -1,8 +1,8 @@
 'use client'
 
 import { MODAL_KEY } from '@/constants/modal'
-import { useEffect, useState } from 'react'
-import { useAccount, useConnect, useDisconnect } from 'wagmi'
+import { useCallback, useEffect, useRef, useState } from 'react'
+import { useAppKitAccount, useAppKitState, useDisconnect } from '@reown/appkit/react'
 import { useModal } from '@contexts/ModalProvider'
 import { useAppStore } from '@store/app'
 import { SmartWalletConnectResponse } from '@type/app'
@@ -14,6 +14,7 @@ import { removeCookie } from '@utils/cookie'
 import { MESSAGE } from '@constants/app'
 import { COOKIE } from '@constants/cookie'
 import DontWorryModal from './DontWorryModal'
+import WalletLoginBottomSheet from './WalletLoginBottomSheet'
 
 export default function Signin() {
   const { isApp } = useAppStore()
@@ -60,38 +61,84 @@ function SignInApp() {
 }
 
 function SignInBrowser() {
-  const { address } = useAccount()
-  const { connect, connectors } = useConnect()
+  const { showModal, closeModal } = useModal()
+  const { open: isAppKitModalOpen } = useAppKitState()
+  const { address, isConnected, status } = useAppKitAccount({ namespace: 'eip155' })
   const { disconnect } = useDisconnect()
   const [isLoading, setIsLoading] = useState(false)
+  const hasRequestedLoginRef = useRef(false)
+  const hasObservedModalOpenRef = useRef(false)
 
   const { mutate: smartWalletLogin } = useSmartWalletLogin()
 
-  const handleLoginButtonClick = () => {
-    setIsLoading(true)
-
-    if (address) {
-      smartWalletLogin({ code: address })
-      return
-    }
-
-    connect(
-      { connector: connectors[0] },
+  const loginWithAddress = useCallback((walletAddress: string) => {
+    hasRequestedLoginRef.current = false
+    smartWalletLogin(
+      { code: walletAddress },
       {
-        onSuccess: (data) => {
+        onError: () => {
           setIsLoading(false)
-          const address = data.accounts[0]
-          smartWalletLogin({ code: address })
         },
       },
     )
+  }, [smartWalletLogin])
+
+  const stopWalletConnect = useCallback(() => {
+    hasRequestedLoginRef.current = false
+    hasObservedModalOpenRef.current = false
+    setIsLoading(false)
+  }, [])
+
+  const handleLoginButtonClick = () => {
+    if (isConnected && address) {
+      setIsLoading(true)
+      loginWithAddress(address)
+      return
+    }
+
+    showModal({
+      key: MODAL_KEY.WALLET_LOGIN,
+      component: (
+        <WalletLoginBottomSheet
+          onConnectStart={() => {
+            hasRequestedLoginRef.current = true
+            hasObservedModalOpenRef.current = false
+            setIsLoading(true)
+          }}
+          onConnectError={stopWalletConnect}
+          onConnectSuccess={() => undefined}
+          onCancel={stopWalletConnect}
+        />
+      ),
+    })
   }
 
   useEffect(() => {
     removeCookie(COOKIE.ACCESSTOKEN)
-    address && disconnect()
+    void disconnect({ namespace: 'eip155' })
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
+
+  useEffect(() => {
+    if (!hasRequestedLoginRef.current || !isConnected || !address) {
+      return
+    }
+
+    closeModal(MODAL_KEY.WALLET_LOGIN)
+    loginWithAddress(address)
+  }, [address, closeModal, isConnected, loginWithAddress])
+
+  useEffect(() => {
+    if (isAppKitModalOpen) {
+      hasObservedModalOpenRef.current = true
+      return
+    }
+
+    const isConnecting = status === 'connecting' || status === 'reconnecting'
+    if (isLoading && hasObservedModalOpenRef.current && !isConnected && !isConnecting) {
+      stopWalletConnect()
+    }
+  }, [isAppKitModalOpen, isConnected, isLoading, status, stopWalletConnect])
 
   return (
     <div className='absolute bottom-40 flex w-full flex-col gap-8 px-16'>

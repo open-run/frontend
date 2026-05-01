@@ -2,7 +2,7 @@
 
 import { redirect, useRouter } from 'next/navigation'
 import { ReactNode, useEffect, useState } from 'react'
-import { useAccount } from 'wagmi'
+import { useAppKitAccount } from '@reown/appkit/react'
 import { useAppStore } from '@store/app'
 import { useUserStore } from '@store/user'
 import { useMessageHandler } from '@hooks/useMessageHandler'
@@ -68,6 +68,11 @@ function useAppCheckAddress() {
 }
 
 function useBrowserCheckAddress() {
-  const { address } = useAccount()
-  return address === undefined ? null : address
+  const { address, isConnected, status } = useAppKitAccount({ namespace: 'eip155' })
+
+  if (status === 'connecting' || status === 'reconnecting') {
+    return undefined
+  }
+
+  return isConnected && address ? address : null
 }
