@@ -781,53 +781,35 @@ function SocialLoginOptions({
   selectedAction: ConnectActionId | null
   onSelect: (wallet: SocialProvider) => void
 }) {
-  const [googleOption, ...shortcutOptions] = SOCIAL_OPTIONS
   const isDisabled = selectedAction != null
-  const isGoogleSelected = selectedAction === googleOption.id
 
   return (
-    <div className='flex flex-col gap-12'>
-      <button
-        className={clsx(
-          'flex h-52 w-full items-center justify-center gap-10 rounded-24 bg-[#F2F3F5] px-16 active-press-duration active:bg-gray/80',
-          isGoogleSelected && 'bg-gray/90',
-          isDisabled && !isGoogleSelected && 'cursor-not-allowed opacity-50',
-        )}
-        disabled={isDisabled}
-        aria-label='Google로 로그인'
-        onClick={() => onSelect(googleOption.id)}>
-        {isGoogleSelected ? <LoadingSpinner size='large' /> : googleOption.icon}
-        <span className='text-16 font-medium text-black-darken'>Continue with google</span>
-      </button>
+    <div className='grid grid-cols-4 gap-10'>
+      {SOCIAL_OPTIONS.map((option) => {
+        const isSelected = selectedAction === option.id
 
-      <div className='grid grid-cols-4 gap-10'>
-        {shortcutOptions.map((option) => {
-          const isSelected = selectedAction === option.id
-          const isOptionDisabled = selectedAction != null
-
-          return (
-            <button
-              key={option.id}
+        return (
+          <button
+            key={option.id}
+            className={clsx(
+              'group flex h-54 items-center justify-center rounded-18 bg-[#F2F3F5] active-press-duration active:scale-95 active:bg-gray/80',
+              isSelected && 'bg-gray/90',
+              isDisabled && !isSelected && 'cursor-not-allowed opacity-50 active:scale-100',
+            )}
+            disabled={isDisabled}
+            aria-label={`${option.label}로 로그인`}
+            onClick={() => onSelect(option.id)}>
+            <span
               className={clsx(
-                'group flex h-54 items-center justify-center rounded-18 bg-[#F2F3F5] active-press-duration active:scale-95 active:bg-gray/80',
-                isSelected && 'bg-gray/90',
-                isOptionDisabled && !isSelected && 'cursor-not-allowed opacity-50 active:scale-100',
-              )}
-              disabled={isOptionDisabled}
-              aria-label={`${option.label}로 로그인`}
-              onClick={() => onSelect(option.id)}>
-              <span
-                className={clsx(
-                  'flex h-34 w-34 items-center justify-center rounded-full transition-transform group-active:scale-95',
-                  option.iconBackground,
-                  option.iconClassName,
-                )}>
-                {isSelected ? <LoadingSpinner /> : option.icon}
-              </span>
-            </button>
-          )
-        })}
-      </div>
+                'flex h-34 w-34 items-center justify-center rounded-full transition-transform group-active:scale-95',
+                option.iconBackground,
+                option.iconClassName,
+              )}>
+              {isSelected ? <LoadingSpinner /> : option.icon}
+            </span>
+          </button>
+        )
+      })}
     </div>
   )
 }
