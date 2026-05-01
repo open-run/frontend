@@ -10,15 +10,17 @@ import { FiCopy } from 'react-icons/fi'
 import { FcGoogle } from 'react-icons/fc'
 import { SiWalletconnect } from 'react-icons/si'
 import {
+  AccountController,
   ApiController,
   AssetUtil,
+  ChainController,
   ConnectionController,
   ConnectorController,
+  StorageUtil,
   type BadgeType,
   type Connector,
   type WcWallet,
 } from '@reown/appkit-controllers'
-import { useAppKitWallet, type Wallet } from '@reown/appkit-wallet-button/react'
 import { useModal } from '@contexts/ModalProvider'
 import { BottomSheet, BottomSheetRef, Dimmed } from '@shared/Modal'
 import { ArrowLeftIcon } from '@icons/arrow'
@@ -33,8 +35,10 @@ import {
 } from '@constants/wallet'
 import { colors } from '@styles/colors'
 
-type SheetView = 'connect' | 'allWallets' | 'walletConnect' | 'externalWallet'
-type ConnectActionId = Wallet | 'directoryWallet'
+type SheetView = 'connect' | 'allWallets' | 'walletConnect' | 'externalWallet' | 'socialWallet'
+type SocialProvider = 'google' | 'x' | 'discord' | 'apple' | 'github'
+type FeaturedWalletActionId = 'metamask' | 'trust' | 'binance' | 'coinbase'
+type ConnectActionId = SocialProvider | FeaturedWalletActionId | 'directoryWallet' | 'walletConnect'
 type WalletBadge = Extract<BadgeType, 'certified'> | undefined
 type WalletConnectSheetState = {
   wcUri?: string
@@ -43,7 +47,7 @@ type WalletConnectSheetState = {
 }
 
 type SocialLoginOption = {
-  id: Wallet
+  id: SocialProvider
   label: string
   icon: ReactNode
   iconBackground?: string
@@ -51,7 +55,7 @@ type SocialLoginOption = {
 }
 
 type FeaturedWalletOption = {
-  id: Wallet
+  id: FeaturedWalletActionId
   label: string
   walletId: string
 }
@@ -60,6 +64,18 @@ type ExternalWalletConnection = {
   wallet: WcWallet
   connector: Connector
   returnView: SheetView
+}
+
+type SocialConnectionState = {
+  provider: SocialProvider
+  popupBlocked: boolean
+  errorMessage: string | null
+}
+
+type SocialAuthConnector = Connector & {
+  provider?: {
+    getSocialRedirectUri?: (params: { provider: SocialProvider }) => Promise<{ uri?: string }>
+  }
 }
 
 type FeaturedWalletMap = Partial<Record<string, WcWallet>>
@@ -81,10 +97,15 @@ const CONNECT_SHEET_HEIGHT = 'min(680px, calc(100dvh - 24px))'
 const SEARCH_SHEET_HEIGHT = 'min(720px, calc(100dvh - 24px))'
 const WALLET_CONNECT_SHEET_HEIGHT = 'min(620px, calc(100dvh - 24px))'
 const EXTERNAL_WALLET_SHEET_HEIGHT = 'min(520px, calc(100dvh - 24px))'
+const SOCIAL_WALLET_SHEET_HEIGHT = 'min(520px, calc(100dvh - 24px))'
 const INITIAL_WALLET_SKELETON_COUNT = 12
 const LOAD_MORE_WALLET_SKELETON_COUNT = 6
 const QR_CODE_MARGIN_MODULES = 8
 const QR_SKELETON_QUIET_ZONE_INSET = '7%'
+const SOCIAL_LOGIN_ORIGIN = 'https://secure.walletconnect.org'
+const SOCIAL_LOGIN_LOADING_URL = `${SOCIAL_LOGIN_ORIGIN}/loading`
+const SOCIAL_LOGIN_POPUP_FEATURES = 'width=600,height=800,scrollbars=yes'
+const SOCIAL_LOGIN_TIMEOUT_MS = 45_000
 
 const SOCIAL_OPTIONS: SocialLoginOption[] = [
   {
@@ -158,10 +179,15 @@ export default function WalletLoginBottomSheet({
   const connectionSettledRef = useRef(false)
   const walletConnectRequestIdRef = useRef(0)
   const externalWalletRequestIdRef = useRef(0)
+  const socialRequestIdRef = useRef(0)
+  const socialPopupRef = useRef<Window | null>(null)
+  const socialMessageHandlerRef = useRef<((event: MessageEvent) => void) | null>(null)
+  const socialTimeoutRef = useRef<number | null>(null)
   const [view, setView] = useState<SheetView>('connect')
   const [walletConnectReturnView, setWalletConnectReturnView] = useState<SheetView>('connect')
   const [walletConnectWallet, setWalletConnectWallet] = useState<WcWallet | null>(null)
   const [externalWalletConnection, setExternalWalletConnection] = useState<ExternalWalletConnection | null>(null)
+  const [socialConnection, setSocialConnection] = useState<SocialConnectionState | null>(null)
   const [selectedAction, setSelectedAction] = useState<ConnectActionId | null>(null)
   const [selectedDirectoryWalletId, setSelectedDirectoryWalletId] = useState<string | null>(null)
   const [errorMessage, setErrorMessage] = useState<string | null>(null)
@@ -174,7 +200,9 @@ export default function WalletLoginBottomSheet({
         ? WALLET_CONNECT_SHEET_HEIGHT
         : view === 'externalWallet'
           ? EXTERNAL_WALLET_SHEET_HEIGHT
-          : CONNECT_SHEET_HEIGHT
+          : view === 'socialWallet'
+            ? SOCIAL_WALLET_SHEET_HEIGHT
+            : CONNECT_SHEET_HEIGHT
 
   const closeSheet = useCallback((shouldCancel: boolean) => {
     shouldCancelOnCloseRef.current = shouldCancel
@@ -216,6 +244,45 @@ export default function WalletLoginBottomSheet({
     [onConnectError],
   )
 
+  const clearSocialLoginSideEffects = useCallback((shouldClosePopup: boolean) => {
+    if (socialTimeoutRef.current != null) {
+      window.clearTimeout(socialTimeoutRef.current)
+      socialTimeoutRef.current = null
+    }
+
+    if (socialMessageHandlerRef.current != null) {
+      window.removeEventListener('message', socialMessageHandlerRef.current, false)
+      socialMessageHandlerRef.current = null
+    }
+
+    if (shouldClosePopup && socialPopupRef.current != null) {
+      try {
+        socialPopupRef.current.close()
+      } catch {
+        // Cross-origin popup handles can reject close attempts; the flow also times out safely.
+      }
+    }
+
+    socialPopupRef.current = null
+    AccountController.setSocialWindow(undefined, ChainController.state.activeChain)
+  }, [])
+
+  const resetSocialLoginFlow = useCallback(
+    (shouldNotify: boolean) => {
+      socialRequestIdRef.current += 1
+      clearSocialLoginSideEffects(true)
+      setSelectedAction(null)
+      setSelectedDirectoryWalletId(null)
+      setSocialConnection(null)
+      connectionSettledRef.current = false
+
+      if (shouldNotify) {
+        onConnectError()
+      }
+    },
+    [clearSocialLoginSideEffects, onConnectError],
+  )
+
   const handleBackClick = useCallback(() => {
     setErrorMessage(null)
 
@@ -232,8 +299,21 @@ export default function WalletLoginBottomSheet({
       return
     }
 
+    if (view === 'socialWallet') {
+      resetSocialLoginFlow(true)
+      setView('connect')
+      return
+    }
+
     setView('connect')
-  }, [externalWalletConnection?.returnView, resetExternalWalletFlow, resetWalletConnectFlow, view, walletConnectReturnView])
+  }, [
+    externalWalletConnection?.returnView,
+    resetExternalWalletFlow,
+    resetSocialLoginFlow,
+    resetWalletConnectFlow,
+    view,
+    walletConnectReturnView,
+  ])
 
   const handleRequestClose = useCallback(() => {
     closeSheet(true)
@@ -248,60 +328,161 @@ export default function WalletLoginBottomSheet({
       resetExternalWalletFlow(false)
     }
 
+    if (shouldCancelOnCloseRef.current && view === 'socialWallet') {
+      resetSocialLoginFlow(false)
+    }
+
     closeModal(MODAL_KEY.WALLET_LOGIN)
 
     if (shouldCancelOnCloseRef.current) {
       onCancel()
     }
-  }, [closeModal, onCancel, resetExternalWalletFlow, resetWalletConnectFlow, view])
+  }, [closeModal, onCancel, resetExternalWalletFlow, resetSocialLoginFlow, resetWalletConnectFlow, view])
 
-  const { connect, isPending } = useAppKitWallet({
-    onSuccess: () => {
-      connectionSettledRef.current = true
-      setErrorMessage(null)
-      onConnectSuccess()
-      closeSheet(false)
-    },
-    onError: () => {
-      connectionSettledRef.current = true
-      setSelectedAction(null)
+  useEffect(() => {
+    return () => clearSocialLoginSideEffects(true)
+  }, [clearSocialLoginSideEffects])
+
+  const startSocialLogin = useCallback(
+    async (provider: SocialProvider) => {
+      const popup = openSocialLoginPopup()
+
+      if (selectedAction != null && selectedAction !== provider) {
+        try {
+          popup?.close()
+        } catch {
+          // Ignore popup cleanup failures from cross-origin handles.
+        }
+        return
+      }
+
+      clearSocialLoginSideEffects(true)
+      connectionSettledRef.current = false
+      setSelectedAction(provider)
       setSelectedDirectoryWalletId(null)
-      setErrorMessage('연결이 취소되었어요. 다시 선택해 주세요.')
-      onConnectError()
-    },
-  })
+      setSocialConnection({ provider, popupBlocked: popup == null, errorMessage: null })
+      setErrorMessage(null)
+      setView('socialWallet')
+      onConnectStart()
 
-  const handleSelectSocialWallet = async (wallet: Wallet) => {
-    if (selectedAction != null || isPending) return
+      const requestId = socialRequestIdRef.current + 1
+      socialRequestIdRef.current = requestId
 
-    connectionSettledRef.current = false
-    setSelectedAction(wallet)
-    setSelectedDirectoryWalletId(null)
-    setErrorMessage(null)
-    onConnectStart()
+      if (popup == null) {
+        onConnectError()
+        setSocialConnection({
+          provider,
+          popupBlocked: true,
+          errorMessage: '팝업이 차단됐어요. 브라우저에서 팝업을 허용한 뒤 다시 시도해 주세요.',
+        })
+        return
+      }
 
-    try {
-      await connect(wallet)
-    } catch {
-      if (!connectionSettledRef.current) {
+      const authConnector = ConnectorController.getAuthConnector() as SocialAuthConnector | undefined
+      const getSocialRedirectUri = authConnector?.provider?.getSocialRedirectUri
+
+      if (authConnector == null || getSocialRedirectUri == null) {
+        try {
+          popup.close()
+        } catch {
+          // Ignore popup cleanup failures from cross-origin handles.
+        }
+        if (requestId !== socialRequestIdRef.current) return
         setSelectedAction(null)
-        setSelectedDirectoryWalletId(null)
-        setErrorMessage('연결을 완료하지 못했어요. 다시 선택해 주세요.')
+        setSocialConnection({
+          provider,
+          popupBlocked: false,
+          errorMessage: '소셜 로그인 설정을 찾지 못했어요. 다시 시도해 주세요.',
+        })
         onConnectError()
         return
       }
-    }
 
-    if (!connectionSettledRef.current) {
-      setSelectedAction(null)
-      setSelectedDirectoryWalletId(null)
-      setErrorMessage('연결을 완료하지 못했어요. 다시 선택해 주세요.')
-      onConnectError()
-    }
+      socialPopupRef.current = popup
+      AccountController.setSocialProvider(provider, ChainController.state.activeChain)
+      AccountController.setSocialWindow(popup, ChainController.state.activeChain)
+
+      const handleSocialConnection = async (event: MessageEvent) => {
+        const resultUri = getTrustedSocialResultUri(event)
+        if (resultUri == null) return
+
+        clearSocialLoginSideEffects(true)
+
+        try {
+          await ConnectionController.connectExternal(
+            { id: authConnector.id, type: authConnector.type, socialUri: resultUri },
+            authConnector.chain,
+          )
+          StorageUtil.setConnectedSocialProvider(provider as Parameters<typeof StorageUtil.setConnectedSocialProvider>[0])
+          await ConnectionController.connectExternal(authConnector, authConnector.chain)
+
+          if (requestId !== socialRequestIdRef.current) return
+
+          if (ChainController.state.activeCaipAddress == null) {
+            throw new Error('Missing social account address')
+          }
+
+          connectionSettledRef.current = true
+          setErrorMessage(null)
+          onConnectSuccess()
+          closeSheet(false)
+        } catch {
+          if (requestId !== socialRequestIdRef.current) return
+          setSelectedAction(null)
+          setSocialConnection({
+            provider,
+            popupBlocked: false,
+            errorMessage: '로그인을 완료하지 못했어요. 다시 시도해 주세요.',
+          })
+          onConnectError()
+        }
+      }
+
+      socialMessageHandlerRef.current = handleSocialConnection
+      window.addEventListener('message', handleSocialConnection, false)
+      socialTimeoutRef.current = window.setTimeout(() => {
+        if (requestId !== socialRequestIdRef.current) return
+        clearSocialLoginSideEffects(true)
+        setSelectedAction(null)
+        setSocialConnection({
+          provider,
+          popupBlocked: false,
+          errorMessage: '로그인 시간이 초과됐어요. 다시 시도해 주세요.',
+        })
+        onConnectError()
+      }, SOCIAL_LOGIN_TIMEOUT_MS)
+
+      try {
+        const { uri } = await getSocialRedirectUri.call(authConnector.provider, { provider })
+
+        if (requestId !== socialRequestIdRef.current) return
+
+        if (uri == null) {
+          throw new Error('Missing social redirect uri')
+        }
+
+        popup.location.href = uri
+      } catch {
+        clearSocialLoginSideEffects(true)
+        if (requestId !== socialRequestIdRef.current) return
+        setSelectedAction(null)
+        setSocialConnection({
+          provider,
+          popupBlocked: false,
+          errorMessage: '소셜 로그인 창을 열지 못했어요. 다시 시도해 주세요.',
+        })
+        onConnectError()
+      }
+    },
+    [clearSocialLoginSideEffects, closeSheet, onConnectError, onConnectStart, onConnectSuccess, selectedAction],
+  )
+
+  const handleSelectSocialWallet = (provider: SocialProvider) => {
+    void startSocialLogin(provider)
   }
 
   const handleOpenWalletConnect = async () => {
-    if (selectedAction != null || isPending) return
+    if (selectedAction != null) return
 
     await startWalletConnect({ action: 'walletConnect', returnView: 'connect' })
   }
@@ -340,6 +521,12 @@ export default function WalletLoginBottomSheet({
         onConnectSuccess()
       } catch {
         if (requestId !== walletConnectRequestIdRef.current) return
+
+        if (hasWalletConnectUri()) {
+          ConnectionController.setWcError(false)
+          return
+        }
+
         ConnectionController.setWcError(true)
         setErrorMessage(null)
         onConnectError()
@@ -408,20 +595,25 @@ export default function WalletLoginBottomSheet({
         return
       }
 
+      if (!isDirectExternalConnector(connector, wallet)) {
+        await startWalletConnect({ action, wallet, returnView })
+        return
+      }
+
       await startExternalWallet({ action, wallet, connector, returnView })
     },
     [startExternalWallet, startWalletConnect],
   )
 
   const handleSelectFeaturedWallet = async (option: FeaturedWalletOption) => {
-    if (selectedAction != null || isPending) return
+    if (selectedAction != null) return
 
     const wallet = getFeaturedWallet(option, featuredWallets)
     await connectCustomWallet({ action: option.id, wallet, returnView: 'connect' })
   }
 
   const handleSelectDirectoryWallet = async (wallet: WcWallet) => {
-    if (selectedAction != null || isPending) return
+    if (selectedAction != null) return
 
     await connectCustomWallet({ action: 'directoryWallet', wallet, returnView: 'allWallets' })
   }
@@ -465,6 +657,7 @@ export default function WalletLoginBottomSheet({
           {view !== 'connect' && (
             <button
               className='absolute left-12 rounded-8 p-4 active-press-duration active:scale-90 active:bg-gray/50'
+              aria-label='이전으로'
               onClick={handleBackClick}>
               <ArrowLeftIcon size={28} color={colors.black.DEFAULT} />
             </button>
@@ -472,6 +665,7 @@ export default function WalletLoginBottomSheet({
 
           <button
             className='absolute right-16 rounded-8 p-4 active-press-duration active:scale-90 active:bg-gray/50'
+            aria-label='닫기'
             onClick={handleRequestClose}>
             <BrokenXIcon size={22} color={colors.black.DEFAULT} />
           </button>
@@ -482,7 +676,9 @@ export default function WalletLoginBottomSheet({
                 ? 'WalletConnect'
                 : view === 'externalWallet'
                   ? externalWalletConnection?.wallet.name ?? 'Connect Wallet'
-                  : 'Connect Wallet'}
+                  : view === 'socialWallet'
+                    ? getSocialOption(socialConnection?.provider)?.label ?? 'Connect Wallet'
+                    : 'Connect Wallet'}
           </span>
         </header>
 
@@ -491,13 +687,12 @@ export default function WalletLoginBottomSheet({
             'flex min-h-0 flex-1 flex-col px-16 pt-4',
             view === 'connect' && 'gap-20 overflow-y-auto pb-36',
             view === 'allWallets' && 'overflow-hidden pb-0',
-            (view === 'walletConnect' || view === 'externalWallet') && 'overflow-hidden pb-28',
+            (view === 'walletConnect' || view === 'externalWallet' || view === 'socialWallet') && 'overflow-hidden pb-28',
           )}>
           {view === 'connect' && (
             <>
               <SocialLoginOptions
                 selectedAction={selectedAction}
-                isPending={isPending}
                 onSelect={handleSelectSocialWallet}
               />
 
@@ -505,7 +700,6 @@ export default function WalletLoginBottomSheet({
 
               <WalletOptions
                 selectedAction={selectedAction}
-                isPending={isPending}
                 walletImages={walletImages}
                 hasMetadataError={featuredWalletMetadata.hasError}
                 onSelect={handleSelectFeaturedWallet}
@@ -522,7 +716,7 @@ export default function WalletLoginBottomSheet({
           {view === 'allWallets' && (
             <AllWalletsContent
               selectedWalletId={selectedDirectoryWalletId}
-              isConnecting={selectedAction != null || isPending}
+              isConnecting={selectedAction != null}
               onSelectWallet={handleSelectDirectoryWallet}
             />
           )}
@@ -546,6 +740,15 @@ export default function WalletLoginBottomSheet({
             />
           )}
 
+          {view === 'socialWallet' && socialConnection != null && (
+            <SocialWalletContent
+              socialConnection={socialConnection}
+              onRetry={() => {
+                void startSocialLogin(socialConnection.provider)
+              }}
+            />
+          )}
+
           {errorMessage != null && (
             <p className='rounded-14 bg-gray-lighten px-12 py-10 text-center text-12 font-semibold text-gray-darker'>
               {errorMessage}
@@ -559,15 +762,13 @@ export default function WalletLoginBottomSheet({
 
 function SocialLoginOptions({
   selectedAction,
-  isPending,
   onSelect,
 }: {
   selectedAction: ConnectActionId | null
-  isPending: boolean
-  onSelect: (wallet: Wallet) => void
+  onSelect: (wallet: SocialProvider) => void
 }) {
   const [googleOption, ...shortcutOptions] = SOCIAL_OPTIONS
-  const isDisabled = selectedAction != null || isPending
+  const isDisabled = selectedAction != null
   const isGoogleSelected = selectedAction === googleOption.id
 
   return (
@@ -588,7 +789,7 @@ function SocialLoginOptions({
       <div className='grid grid-cols-4 gap-10'>
         {shortcutOptions.map((option) => {
           const isSelected = selectedAction === option.id
-          const isOptionDisabled = selectedAction != null || isPending
+          const isOptionDisabled = selectedAction != null
 
           return (
             <button
@@ -629,7 +830,6 @@ function OrDivider() {
 
 function WalletOptions({
   selectedAction,
-  isPending,
   walletImages,
   hasMetadataError,
   onSelect,
@@ -638,7 +838,6 @@ function WalletOptions({
   onShowAllWallets,
 }: {
   selectedAction: ConnectActionId | null
-  isPending: boolean
   walletImages: WalletImageMap
   hasMetadataError: boolean
   onSelect: (option: FeaturedWalletOption) => void
@@ -646,7 +845,7 @@ function WalletOptions({
   onRetryMetadata: () => void
   onShowAllWallets: () => void
 }) {
-  const isAnyDisabled = selectedAction != null || isPending
+  const isAnyDisabled = selectedAction != null
 
   return (
     <div className='flex flex-col gap-8'>
@@ -675,7 +874,7 @@ function WalletOptions({
         badge='560+'
         icon={<SearchWalletIcon />}
         isSelected={false}
-        disabled={selectedAction != null || isPending}
+        disabled={selectedAction != null}
         onClick={onShowAllWallets}
       />
 
@@ -835,6 +1034,57 @@ function ExternalWalletContent({
         onClick={onRetry}>
         연결 요청 다시 보내기
       </button>
+    </div>
+  )
+}
+
+function SocialWalletContent({
+  socialConnection,
+  onRetry,
+}: {
+  socialConnection: SocialConnectionState
+  onRetry: () => void
+}) {
+  const option = getSocialOption(socialConnection.provider)
+  const isBlocked = socialConnection.popupBlocked
+  const hasError = socialConnection.errorMessage != null
+  const title = isBlocked
+    ? '팝업이 차단됐어요'
+    : hasError
+      ? '로그인을 완료하지 못했어요'
+      : `${option?.label ?? '소셜'} 로그인 진행 중`
+  const description =
+    socialConnection.errorMessage ??
+    `${option?.label ?? '소셜'} 인증 창에서 로그인을 완료해 주세요. 이 화면은 인증 결과를 기다리고 있어요.`
+  const buttonLabel = isBlocked ? '팝업 허용 후 다시 시도' : '로그인 창 다시 열기'
+
+  return (
+    <div className='flex min-h-0 flex-1 flex-col items-center justify-between gap-16 overflow-hidden'>
+      <div className='flex min-h-0 w-full flex-1 flex-col items-center justify-center gap-18 text-center'>
+        <div className='relative flex h-86 w-86 items-center justify-center rounded-26 bg-[#F2F3F5]'>
+          <span className={clsx('flex h-62 w-62 items-center justify-center rounded-18', option?.iconBackground, option?.iconClassName)}>
+            {option?.icon}
+          </span>
+          {!isBlocked && !hasError && (
+            <span className='absolute -bottom-6 -right-6 flex h-26 w-26 items-center justify-center rounded-full bg-white shadow-[0_2px_10px_rgba(0,0,0,0.16)]'>
+              <LoadingSpinner />
+            </span>
+          )}
+        </div>
+
+        <div className='flex flex-col items-center gap-6'>
+          <p className='text-17 font-semibold text-black-darken'>{title}</p>
+          <p className='max-w-[300px] text-13 font-medium leading-[1.45] text-gray-darker'>{description}</p>
+        </div>
+      </div>
+
+      {(isBlocked || hasError) && (
+        <button
+          className='flex h-48 w-full items-center justify-center rounded-16 bg-[#F2F3F5] text-15 font-semibold text-black-darken active-press-duration active:bg-gray/80'
+          onClick={onRetry}>
+          {buttonLabel}
+        </button>
+      )}
     </div>
   )
 }
@@ -1600,6 +1850,10 @@ function readWalletConnectState(): WalletConnectSheetState {
   }
 }
 
+function hasWalletConnectUri() {
+  return typeof ConnectionController.state.wcUri === 'string' && ConnectionController.state.wcUri.length > 0
+}
+
 function uniqueWallets(wallets: WcWallet[]) {
   const map = new Map<string, WcWallet>()
 
@@ -1618,6 +1872,47 @@ function getWalletIdSet(wallets: WcWallet[]) {
 
 function hasNewWalletId(nextWalletIds: Set<string>, previousWalletIds: Set<string>) {
   return Array.from(nextWalletIds).some((walletId) => !previousWalletIds.has(walletId))
+}
+
+function getSocialOption(provider?: SocialProvider) {
+  return SOCIAL_OPTIONS.find((option) => option.id === provider)
+}
+
+function openSocialLoginPopup() {
+  try {
+    return window.open(SOCIAL_LOGIN_LOADING_URL, 'popupWindow', SOCIAL_LOGIN_POPUP_FEATURES)
+  } catch {
+    return null
+  }
+}
+
+function getTrustedSocialResultUri(event: MessageEvent) {
+  if (event.origin !== SOCIAL_LOGIN_ORIGIN) return undefined
+
+  const data = event.data
+
+  if (typeof data !== 'object' || data == null || !('resultUri' in data)) {
+    return undefined
+  }
+
+  const resultUri = data.resultUri
+  return typeof resultUri === 'string' ? resultUri : undefined
+}
+
+function isDirectExternalConnector(connector: Connector, wallet: WcWallet) {
+  if (wallet.id === WALLET_ID_COINBASE_WALLET || connector.id.toLowerCase().includes('coinbase')) {
+    return false
+  }
+
+  if (connector.type !== 'ANNOUNCED' && connector.type !== 'INJECTED') {
+    return false
+  }
+
+  if (connector.id === 'injected' && wallet.rdns == null) {
+    return false
+  }
+
+  return connector.provider != null || connector.info != null
 }
 
 async function getWalletImage(wallet: WcWallet) {
