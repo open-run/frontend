@@ -18,6 +18,7 @@ import RarityIcon from '@components/avatar/shared/RarityIcon'
 import LoadingLogo from '@shared/LoadingLogo'
 import { Dimmed, Popup } from '@shared/Modal'
 import AdminAvatarTryOnPanel from './AdminAvatarTryOnPanel'
+import AdminChallengeContentPanel from './AdminChallengeContentPanel'
 
 const FALLBACK_THUMBNAIL_URL = '/images/avatars/avatar_default_body.png'
 type AdminMenuKey = 'grant' | 'avatarTryOn' | 'mint' | 'challenge'
@@ -199,8 +200,10 @@ export default function AdminPage() {
           </section>
         ) : activeMenu === 'avatarTryOn' ? (
           <AdminAvatarTryOnPanel />
+        ) : activeMenu === 'challenge' ? (
+          <AdminChallengeContentPanel />
         ) : (
-          <ComingSoonPanel title={activeMenu === 'mint' ? 'NFT 신규 민팅' : '도전과제 컨텐츠'} />
+          <ComingSoonPanel title='NFT 신규 민팅' />
         )}
       </section>
 
