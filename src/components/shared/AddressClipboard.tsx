@@ -1,5 +1,5 @@
 import { ReactNode, useEffect, useState } from 'react'
-import { useAccount } from 'wagmi'
+import { useAppKitAccount } from '@reown/appkit/react'
 import { useModal } from '@contexts/ModalProvider'
 import { useAppStore } from '@store/app'
 import { postMessageToRN } from '@shared/AppBridge'
@@ -42,7 +42,7 @@ function AddressClipboardApp({ children }: Props) {
 }
 
 function AddressClipboardBrowser({ children }: Props) {
-  const { address } = useAccount()
+  const { address } = useAppKitAccount({ namespace: 'eip155' })
   return <CommonComponent address={address ?? ''}>{children}</CommonComponent>
 }
 

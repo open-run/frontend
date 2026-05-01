@@ -1,6 +1,7 @@
 import clsx from 'clsx'
 import { motion } from 'framer-motion'
 import {
+  CSSProperties,
   forwardRef,
   ReactNode,
   useCallback,
@@ -31,6 +32,7 @@ export type BottomSheetRef = {
 
 const TRANSITION_DURATION = 300
 const CLOSE_THRESHOLD = 20
+const SHEET_TRANSITION = `transform ${TRANSITION_DURATION}ms ease-in-out, height ${TRANSITION_DURATION}ms ease-in-out`
 
 export const BottomSheet = forwardRef<
   BottomSheetRef,
@@ -38,9 +40,10 @@ export const BottomSheet = forwardRef<
     children: ReactNode
     fullSize?: boolean
     className?: string
+    style?: CSSProperties
     onClose?: () => void
   }
->(function BottomSheet({ children, fullSize, className, onClose }, ref) {
+>(function BottomSheet({ children, fullSize, className, style, onClose }, ref) {
   const sheetRef = useRef<HTMLDivElement>(null)
   const [isDragging, setIsDragging] = useState(false)
   const startYRef = useRef(0)
@@ -67,7 +70,7 @@ export const BottomSheet = forwardRef<
     el.style.transform = 'translateY(100%)'
     requestAnimationFrame(() => {
       requestAnimationFrame(() => {
-        el.style.transition = `transform ${TRANSITION_DURATION}ms ease-in-out`
+        el.style.transition = SHEET_TRANSITION
         el.style.transform = fullSize ? 'translateY(7%)' : 'translateY(0%)'
       })
     })
@@ -86,7 +89,7 @@ export const BottomSheet = forwardRef<
 
     const el = sheetRef.current
     if (el) {
-      el.style.transition = `transform ${TRANSITION_DURATION}ms ease-in-out`
+      el.style.transition = SHEET_TRANSITION
       el.style.transform = 'translateY(100%)'
     }
 
@@ -125,7 +128,7 @@ export const BottomSheet = forwardRef<
     } else {
       const el = sheetRef.current
       if (el) {
-        el.style.transition = `transform ${TRANSITION_DURATION}ms ease-in-out`
+        el.style.transition = SHEET_TRANSITION
         el.style.transform = openTransform
       }
     }
@@ -140,7 +143,7 @@ export const BottomSheet = forwardRef<
 
     const el = sheetRef.current
     if (el) {
-      el.style.transition = `transform ${TRANSITION_DURATION}ms ease-in-out`
+      el.style.transition = SHEET_TRANSITION
       el.style.transform = openTransform
     }
 
@@ -157,6 +160,7 @@ export const BottomSheet = forwardRef<
         isDragging && 'cursor-grabbing',
         className,
       )}
+      style={style}
       onClick={(e) => e.stopPropagation()}
       onMouseMove={(e) => handleDragMove(e.clientY)}
       onMouseUp={handleDragEnd}
