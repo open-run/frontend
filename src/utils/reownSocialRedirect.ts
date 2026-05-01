@@ -1,4 +1,4 @@
-export type ReownSocialProvider = 'google' | 'x' | 'discord' | 'apple' | 'github'
+export type ReownSocialProvider = 'google' | 'discord' | 'apple' | 'github'
 
 const PENDING_SOCIAL_PROVIDER_KEY = 'openrun:reown-social-provider'
 
@@ -63,5 +63,5 @@ function injectIntoUrl(url: string, key: string, appendString: string) {
 }
 
 function isReownSocialProvider(provider: string | null): provider is ReownSocialProvider {
-  return provider === 'google' || provider === 'x' || provider === 'discord' || provider === 'apple' || provider === 'github'
+  return provider === 'google' || provider === 'discord' || provider === 'apple' || provider === 'github'
 }

@@ -5,7 +5,6 @@ import Image from 'next/image'
 import QRCode from 'qrcode'
 import { ReactNode, useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { FaApple, FaDiscord, FaGithub } from 'react-icons/fa'
-import { FaXTwitter } from 'react-icons/fa6'
 import { FiCopy } from 'react-icons/fi'
 import { FcGoogle } from 'react-icons/fc'
 import { SiWalletconnect } from 'react-icons/si'
@@ -119,12 +118,6 @@ const SOCIAL_OPTIONS: SocialLoginOption[] = [
     icon: <FcGoogle size={26} />,
     iconBackground: 'bg-white',
     iconClassName: 'ring-1 ring-gray/80',
-  },
-  {
-    id: 'x',
-    label: 'X',
-    icon: <FaXTwitter size={24} />,
-    iconBackground: 'bg-black-darkest text-white',
   },
   {
     id: 'discord',

@@ -28,7 +28,7 @@ createAppKit({
     analytics: false,
     email: false,
     emailShowWallets: true,
-    socials: ['google', 'apple', 'discord', 'x', 'github'],
+    socials: ['google', 'apple', 'discord', 'github'],
   },
   metadata: {
     name: 'Open Run',
