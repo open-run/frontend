@@ -1137,6 +1137,18 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@openrun/api-client@workspace:*, @openrun/api-client@workspace:packages/api-client":
+  version: 0.0.0-use.local
+  resolution: "@openrun/api-client@workspace:packages/api-client"
+  dependencies:
+    axios: "npm:^1.6.7"
+    react-cookie: "npm:^7.1.4"
+    typescript: "npm:^5"
+  peerDependencies:
+    next: ^15.0.0
+  languageName: unknown
+  linkType: soft
+
 "@openrun/types@workspace:*, @openrun/types@workspace:packages/types":
   version: 0.0.0-use.local
   resolution: "@openrun/types@workspace:packages/types"
@@ -1149,6 +1161,7 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@openrun/web@workspace:apps/web"
   dependencies:
+    "@openrun/api-client": "workspace:*"
     "@openrun/types": "workspace:*"
     "@reown/appkit": "npm:1.7.8"
     "@reown/appkit-adapter-wagmi": "npm:1.7.8"

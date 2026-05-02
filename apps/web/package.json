@@ -11,6 +11,7 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
+    "@openrun/api-client": "workspace:*",
     "@openrun/types": "workspace:*",
     "@reown/appkit": "1.7.8",
     "@reown/appkit-adapter-wagmi": "1.7.8",

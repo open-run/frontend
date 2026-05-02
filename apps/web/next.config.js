@@ -3,7 +3,7 @@ const path = require('path')
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   outputFileTracingRoot: path.join(__dirname, '../../'),
-  transpilePackages: ['@openrun/types'],
+  transpilePackages: ['@openrun/types', '@openrun/api-client'],
   images: {
     remotePatterns: [
       {
