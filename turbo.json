@@ -1,9 +1,13 @@
 {
   "$schema": "https://turbo.build/schema.json",
-  "globalDependencies": [".env"],
+  "globalEnv": [
+    "NEXT_PUBLIC_*",
+    "NODE_ENV"
+  ],
   "tasks": {
     "build": {
       "dependsOn": ["^build"],
+      "inputs": ["$TURBO_DEFAULT$", ".env*"],
       "outputs": [".next/**", "!.next/cache/**"]
     },
     "dev": {
@@ -11,10 +15,11 @@
       "persistent": true
     },
     "lint": {
-      "dependsOn": ["^build"]
+      "dependsOn": []
     },
     "typecheck": {
-      "dependsOn": ["^build"]
+      "dependsOn": ["^typecheck"],
+      "outputs": ["*.tsbuildinfo"]
     }
   }
 }
