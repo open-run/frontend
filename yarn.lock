@@ -1137,10 +1137,19 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@openrun/types@workspace:*, @openrun/types@workspace:packages/types":
+  version: 0.0.0-use.local
+  resolution: "@openrun/types@workspace:packages/types"
+  dependencies:
+    typescript: "npm:^5"
+  languageName: unknown
+  linkType: soft
+
 "@openrun/web@workspace:apps/web":
   version: 0.0.0-use.local
   resolution: "@openrun/web@workspace:apps/web"
   dependencies:
+    "@openrun/types": "workspace:*"
     "@reown/appkit": "npm:1.7.8"
     "@reown/appkit-adapter-wagmi": "npm:1.7.8"
     "@reown/appkit-wallet-button": "npm:1.7.8"
