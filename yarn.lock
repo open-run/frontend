@@ -1172,8 +1172,6 @@ __metadata:
     typescript: "npm:^5"
   peerDependencies:
     next: ^15.0.0
-    react: ^19.0.0
-    react-cookie: ^7.0.0
   peerDependenciesMeta:
     next:
       optional: true
