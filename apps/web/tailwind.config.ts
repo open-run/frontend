@@ -1,11 +1,11 @@
 import type { Config } from 'tailwindcss'
-import { colors } from './src/styles/colors'
+import { colors } from '../../packages/ui/src/styles/colors'
 
 const createPxRange = (max: number) => Object.fromEntries(Array.from(Array(max + 1)).map((_, i) => [i, `${i}px`]))
 
 const config: Config = {
   darkMode: 'class',
-  content: ['./src/**/*.{js,ts,jsx,tsx}'],
+  content: ['./src/**/*.{js,ts,jsx,tsx}', '../../packages/ui/src/**/*.{js,ts,jsx,tsx}'],
   theme: {
     screens: {
       xs: '360px', // min-w-[360px]

@@ -1,4 +1,4 @@
-import { IconProps } from '@type/icon'
+import { IconProps } from '@openrun/types'
 
 export function OpenrunIcon({ size, color, className }: IconProps) {
   return (
