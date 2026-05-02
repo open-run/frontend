@@ -1,5 +1,6 @@
 import Image from 'next/image'
 import Spacing from '@components/shared/Spacing'
+import TypingText from '@components/shared/TypingText'
 
 export default function Welcome() {
   return (
@@ -18,7 +19,11 @@ export default function Welcome() {
         <p className='text-28 text-white'>당신만의 캐릭터</p>
         <p className='text-28 font-bold text-white'>함께 달리는 즐거움!</p>
         <Spacing size={32} />
-        <p className='text-28 font-bold text-secondary'>{`오픈런 가입을\n환영합니다!`}</p>
+        <TypingText
+          text={'오픈런 가입을\n환영합니다!'}
+          wrapper='p'
+          className='whitespace-pre-line text-28 font-bold text-secondary'
+        />
       </div>
     </section>
   )
