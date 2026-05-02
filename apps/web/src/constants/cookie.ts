@@ -1,3 +1,1 @@
-export const COOKIE = {
-  ACCESSTOKEN: 'ACCESSTOKEN',
-} as const
+export { COOKIE } from '@openrun/api-client'

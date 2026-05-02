@@ -1,2 +1,2 @@
-export { default } from './client'
+export { default, createApiClient, COOKIE } from './client'
 export * from './type'

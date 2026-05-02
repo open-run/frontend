@@ -3,61 +3,78 @@ import { Cookies } from 'react-cookie'
 
 export type { ApiResponse, Pagination, PaginationResponse } from './type'
 
-const ACCESSTOKEN = 'ACCESSTOKEN'
+export const COOKIE = {
+  ACCESSTOKEN: 'ACCESSTOKEN',
+} as const
+
+const isDev = process.env.NODE_ENV !== 'production'
+const log: (...args: unknown[]) => void = isDev ? console.log.bind(console) : () => {}
 
 const cookies = new Cookies()
 
-const http = axios.create({
-  baseURL: process.env.NEXT_PUBLIC_API_SERVER_URL,
-})
+type ApiClientConfig = {
+  baseURL?: string
+  cookieName?: string
+}
 
-http.interceptors.request.use(async (request) => {
-  const { method, url, params } = request
+export function createApiClient({ baseURL, cookieName = COOKIE.ACCESSTOKEN }: ApiClientConfig = {}) {
+  const http = axios.create({ baseURL })
 
-  if (params != null) {
-    request.params = Object.fromEntries(
-      Object.entries(params).filter(([_, value]) => value !== null && value !== undefined),
-    )
-  }
+  http.interceptors.request.use(async (request) => {
+    const { method, url, params } = request
 
-  console.log(`🚀 [API] ${method?.toUpperCase()} ${url} | Request\n\n${JSON.stringify(request.params, null, 2)}\n`)
-
-  let token
-  if (typeof window === 'undefined') {
-    const { cookies: nextCookies } = await import('next/headers')
-    const cookieStore = await nextCookies()
-    token = cookieStore.get(ACCESSTOKEN)?.value
-  } else {
-    token = cookies.get(ACCESSTOKEN)
-  }
-
-  if (token != null) {
-    request.headers = new AxiosHeaders()
-    request.headers['Authorization'] = token
-  }
-
-  return request
-})
-
-http.interceptors.response.use(
-  (response: AxiosResponse) => {
-    const { method, url } = response.config
-    const { status, data } = response
-
-    console.log(`🎁 [API] ${method?.toUpperCase()} ${url} | Response ${status}\n\n${JSON.stringify(data, null, 2)}\n`)
-
-    return data
-  },
-  (error: AxiosError | Error) => {
-    if (axios.isAxiosError(error)) {
-      console.log('Axios Error: ', error)
-      const { message } = error
-      const { method, url } = error.config as AxiosRequestConfig
-      console.log(`🚨 [API] ${method?.toUpperCase()} ${url} | Error ${message}`)
+    if (params != null) {
+      request.params = Object.fromEntries(
+        Object.entries(params).filter(([_, value]) => value !== null && value !== undefined),
+      )
     }
 
-    return Promise.reject(error)
-  },
-)
+    log(`🚀 [API] ${method?.toUpperCase()} ${url} | Request\n\n${JSON.stringify(request.params, null, 2)}\n`)
 
-export default http
+    let token: string | undefined
+    if (typeof window === 'undefined') {
+      try {
+        const { cookies: nextCookies } = await import('next/headers')
+        const cookieStore = await nextCookies()
+        token = cookieStore.get(cookieName)?.value
+      } catch {
+        token = undefined
+      }
+    } else {
+      token = cookies.get(cookieName)
+    }
+
+    if (token != null) {
+      request.headers = new AxiosHeaders()
+      request.headers['Authorization'] = token
+    }
+
+    return request
+  })
+
+  http.interceptors.response.use(
+    (response: AxiosResponse) => {
+      const { method, url } = response.config
+      const { status, data } = response
+
+      log(`🎁 [API] ${method?.toUpperCase()} ${url} | Response ${status}\n\n${JSON.stringify(data, null, 2)}\n`)
+
+      return data
+    },
+    (error: AxiosError | Error) => {
+      if (axios.isAxiosError(error)) {
+        log('Axios Error: ', error)
+        const { message } = error
+        const { method, url } = error.config as AxiosRequestConfig
+        log(`🚨 [API] ${method?.toUpperCase()} ${url} | Error ${message}`)
+      }
+
+      return Promise.reject(error)
+    },
+  )
+
+  return http
+}
+
+const defaultClient = createApiClient({ baseURL: process.env.NEXT_PUBLIC_API_SERVER_URL })
+export default defaultClient

@@ -1,5 +1,5 @@
 import type { Config } from 'tailwindcss'
-import { colors } from '../../packages/ui/src/styles/colors'
+import { colors } from '@openrun/ui/styles/colors'
 
 const createPxRange = (max: number) => Object.fromEntries(Array.from(Array(max + 1)).map((_, i) => [i, `${i}px`]))
 
