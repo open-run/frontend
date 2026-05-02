@@ -12,13 +12,18 @@ export type Rarity = 'common' | 'rare' | 'epic'
 
 export type Avatar = {
   id: string
-  imageUrl: string | string[]
-  thumbnailUrl: string
+  nftItemId?: number
+  tokenId?: string | null
+  balance?: string | null
+  imageUrl: string | string[] | null
+  thumbnailUrl: string | null
   rarity: Rarity
   name: string
   mainCategory: MainCategory
   subCategory: SubCategory | null
-  link: string
+  storageKey?: string | null
+  thumbnailStorageKey?: string | null
+  link?: string
 }
 
 export type WearingAvatar = {

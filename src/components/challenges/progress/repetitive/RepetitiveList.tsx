@@ -26,7 +26,12 @@ async function RepetitiveList() {
               {challenge.challengeName}
             </p>
             <div className='flex items-center gap-4'>
-              <RewardStatus progress={challenge.currentCount} total={challenge.conditionCount} challengeId={challenge.challengeId} />
+              <RewardStatus
+                progress={challenge.currentCount}
+                total={challenge.conditionCount}
+                userChallengeId={challenge.userChallengeId}
+                nftCompleted={challenge.nftCompleted}
+              />
               <ArrowRightIcon size={16} color={colors.black.darkest} />
             </div>
           </RepetitiveItem>

@@ -152,7 +152,10 @@ export default function BungDetails({ details, initialChatAction }: { details: B
         onClick={handleScrollToTop}>
         <button
           className='-translate-x-4 rounded-8 p-4 active-press-duration active:scale-90 active:bg-white/10'
-          onClick={() => router.push('/')}>
+          onClick={(event) => {
+            event.stopPropagation()
+            router.back()
+          }}>
           <ArrowLeftIcon size={24} color={colors.white} />
         </button>
         <div className='flex items-center gap-4'>

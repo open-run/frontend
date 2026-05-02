@@ -1,62 +1,71 @@
 'use client'
 
+import { useQueryClient } from '@tanstack/react-query'
 import html2canvas from 'html2canvas'
-import Image from 'next/image'
 import { useRouter } from 'next/navigation'
 import { useEffect, useRef, useState } from 'react'
 import { useModal } from '@contexts/ModalProvider'
 import { Avatar, SelectedCategory, WearingAvatar } from '@type/avatar'
 import AvatarComponent from '@shared/Avatar'
+import ToastModal from '@shared/ToastModal'
 import { ArrowLeftIcon } from '@icons/arrow'
 import { TransparentOpenrunIcon } from '@icons/openrun'
 import { ResetIcon } from '@icons/reset'
-import { cropSquareImage } from '@utils/image'
-import { getAvatarList, getWearingAvatar, saveWearingAvatar } from '@utils/avatar-storage'
+import { BUNGS_QUERY_KEY } from '@apis/v1/bungs/query'
+import { SaveWearingNftAvatarRequest } from '@apis/v1/nft/avatar-items'
+import { useSaveWearingNftAvatarWithProfileImageMutation } from '@apis/v1/nft/avatar-items/mutation'
+import {
+  WEARING_NFT_AVATAR_QUERY_KEY,
+  useSuspenseOwnedNftAvatarItemsQuery,
+  useSuspenseWearingNftAvatarQuery,
+} from '@apis/v1/nft/avatar-items/query'
+import { USERINFO_QUERY_KEY } from '@apis/v1/users/query'
 import { MODAL_KEY } from '@constants/modal'
 import { colors } from '@styles/colors'
-import AvatarCaptureModal from './AvatarCaptureModal'
 import AvatarList from './AvatarList'
 import Category from './Category'
 
+const PROFILE_IMAGE_SIZE = 512
+
+const EMPTY_WEARING_AVATAR: WearingAvatar = {
+  upperClothing: null,
+  lowerClothing: null,
+  fullSet: null,
+  footwear: null,
+  face: null,
+  skin: null,
+  hair: null,
+  accessories: {
+    'head-accessories': null,
+    'ear-accessories': null,
+    'body-accessories': null,
+    'eye-accessories': null,
+  },
+}
+
 export default function AvatarPage() {
   const router = useRouter()
+  const queryClient = useQueryClient()
   const { showModal } = useModal()
 
   const avatarRef = useRef<HTMLDivElement>(null)
-  const [avatarList, setAvatarList] = useState<Avatar[]>([])
-  const [selectedAvatar, setSelectedAvatar] = useState<WearingAvatar>({
-    upperClothing: null,
-    lowerClothing: null,
-    fullSet: null,
-    footwear: null,
-    face: null,
-    skin: null,
-    hair: null,
-    accessories: {
-      'head-accessories': null,
-      'ear-accessories': null,
-      'body-accessories': null,
-      'eye-accessories': null,
-    },
-  })
+  const [selectedAvatar, setSelectedAvatar] = useState<WearingAvatar>(EMPTY_WEARING_AVATAR)
   const [selectedCategory, setSelectedCategory] = useState<SelectedCategory>({
     mainCategory: 'upperClothing',
     subCategory: null,
   })
-  const [isLoaded, setIsLoaded] = useState(false)
+  const { data: ownedAvatarItems } = useSuspenseOwnedNftAvatarItemsQuery()
+  const { data: wearingAvatar } = useSuspenseWearingNftAvatarQuery()
+  const saveWearingAvatarWithProfileImageMutation = useSaveWearingNftAvatarWithProfileImageMutation()
+  const [isSaving, setIsSaving] = useState(false)
 
-  // localStorage에서 데이터 로드
   useEffect(() => {
-    setAvatarList(getAvatarList())
-    setSelectedAvatar(getWearingAvatar())
-    setIsLoaded(true)
-  }, [])
+    if (wearingAvatar?.data) {
+      setSelectedAvatar(wearingAvatar.data)
+    }
+  }, [wearingAvatar])
 
-  // 아바타 변경 시 localStorage에 자동 저장
-  useEffect(() => {
-    if (!isLoaded) return
-    saveWearingAvatar(selectedAvatar)
-  }, [selectedAvatar, isLoaded])
+  const avatarList = ownedAvatarItems?.data ?? []
 
   const filteredAvatarList = avatarList.filter((avatar) => {
     if (selectedCategory.mainCategory === avatar.mainCategory) {
@@ -67,46 +76,41 @@ export default function AvatarPage() {
   })
 
   const handleReset = () => {
-    setSelectedAvatar({
-      upperClothing: null,
-      lowerClothing: null,
-      fullSet: null,
-      footwear: null,
-      face: null,
-      skin: null,
-      hair: null,
-      accessories: {
-        'head-accessories': null,
-        'ear-accessories': null,
-        'body-accessories': null,
-        'eye-accessories': null,
-      },
-    })
+    setSelectedAvatar(EMPTY_WEARING_AVATAR)
   }
 
-  const handleCapture = async () => {
-    if (!avatarRef.current) return
+  const handleSave = async () => {
+    if (isSaving) return
 
-    const canvas = await html2canvas(avatarRef.current, { backgroundColor: null })
-    const originalImgData = canvas.toDataURL('image/png')
+    if (!avatarRef.current) {
+      showToast(showModal, 'error', '아바타 저장에 실패했습니다.')
+      return
+    }
 
-    // 원형으로 자르기
-    const circularImgData = await cropSquareImage(originalImgData)
+    setIsSaving(true)
 
-    showModal({
-      key: MODAL_KEY.AVATAR_CAPTURE,
-      component: <AvatarCaptureModal imgData={circularImgData} />,
-    })
-  }
+    try {
+      const profileImage = await captureAvatarProfileImage(avatarRef.current)
+      const { data } = await saveWearingAvatarWithProfileImageMutation.mutateAsync({
+        wearingAvatar: toSaveWearingAvatarRequest(selectedAvatar),
+        profileImage,
+      })
+      setSelectedAvatar(data)
 
-  if (!isLoaded) {
-    return (
-      <article className='h-full w-full bg-white app:pt-50'>
-        <header className='relative z-20 flex h-60 w-full items-center justify-center bg-white px-5'>
-          <h1 className='text-16 font-bold text-black'>아바타 변경</h1>
-        </header>
-      </article>
-    )
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: WEARING_NFT_AVATAR_QUERY_KEY }),
+        queryClient.invalidateQueries({ queryKey: [USERINFO_QUERY_KEY] }),
+        queryClient.invalidateQueries({ queryKey: [BUNGS_QUERY_KEY] }),
+      ])
+
+      showToast(showModal, 'success', '아바타 저장 완료!')
+      router.replace('/')
+    } catch (error) {
+      console.error(error)
+      showToast(showModal, 'error', '아바타 저장에 실패했습니다.')
+    } finally {
+      setIsSaving(false)
+    }
   }
 
   return (
@@ -121,7 +125,8 @@ export default function AvatarPage() {
         <h1 className='text-16 font-bold text-black'>아바타 변경</h1>
         <button
           className='absolute right-16 translate-x-8 rounded-8 px-8 py-4 active-press-duration active:scale-90 active:bg-gray/50'
-          onClick={handleCapture}>
+          disabled={isSaving || saveWearingAvatarWithProfileImageMutation.isPending}
+          onClick={handleSave}>
           <span className='text-14 text-black'>저장</span>
         </button>
       </header>
@@ -167,6 +172,82 @@ export default function AvatarPage() {
   )
 }
 
-function Parts({ src, alt }: { src: string; alt: string }) {
-  return <Image className='object-contain' src={src} alt={alt} priority fill sizes='(max-width: 768px) 100vw, 33vw' />
+async function captureAvatarProfileImage(avatarElement: HTMLElement): Promise<Blob> {
+  const sourceCanvas = await html2canvas(avatarElement, {
+    backgroundColor: null,
+    logging: false,
+    scale: Math.max(2, window.devicePixelRatio || 1),
+    useCORS: true,
+  })
+
+  const outputCanvas = document.createElement('canvas')
+  outputCanvas.width = PROFILE_IMAGE_SIZE
+  outputCanvas.height = PROFILE_IMAGE_SIZE
+
+  const context = outputCanvas.getContext('2d')
+  if (context == null) {
+    throw new Error('Canvas context를 가져올 수 없습니다.')
+  }
+
+  context.clearRect(0, 0, PROFILE_IMAGE_SIZE, PROFILE_IMAGE_SIZE)
+  const scale = Math.min(PROFILE_IMAGE_SIZE / sourceCanvas.width, PROFILE_IMAGE_SIZE / sourceCanvas.height)
+  const targetWidth = Math.round(sourceCanvas.width * scale)
+  const targetHeight = Math.round(sourceCanvas.height * scale)
+  const targetX = Math.round((PROFILE_IMAGE_SIZE - targetWidth) / 2)
+  const targetY = Math.round((PROFILE_IMAGE_SIZE - targetHeight) / 2)
+
+  context.drawImage(
+    sourceCanvas,
+    targetX,
+    targetY,
+    targetWidth,
+    targetHeight,
+  )
+
+  return new Promise((resolve, reject) => {
+    outputCanvas.toBlob((blob) => {
+      if (blob == null) {
+        reject(new Error('아바타 이미지를 생성할 수 없습니다.'))
+        return
+      }
+
+      resolve(blob)
+    }, 'image/png')
+  })
+}
+
+function showToast(
+  showModal: ReturnType<typeof useModal>['showModal'],
+  mode: 'success' | 'error',
+  message: string,
+) {
+  showModal({
+    key: MODAL_KEY.TOAST,
+    component: <ToastModal mode={mode} message={message} />,
+  })
+}
+
+function toSaveWearingAvatarRequest(avatar: WearingAvatar): SaveWearingNftAvatarRequest {
+  return {
+    fullSet: getNftItemId(avatar.fullSet),
+    upperClothing: getNftItemId(avatar.upperClothing),
+    lowerClothing: getNftItemId(avatar.lowerClothing),
+    footwear: getNftItemId(avatar.footwear),
+    face: getNftItemId(avatar.face),
+    skin: getNftItemId(avatar.skin),
+    hair: getNftItemId(avatar.hair),
+    accessories: {
+      'head-accessories': getNftItemId(avatar.accessories['head-accessories']),
+      'eye-accessories': getNftItemId(avatar.accessories['eye-accessories']),
+      'ear-accessories': getNftItemId(avatar.accessories['ear-accessories']),
+      'body-accessories': getNftItemId(avatar.accessories['body-accessories']),
+    },
+  }
+}
+
+function getNftItemId(avatar: Avatar | null): number | null {
+  if (avatar == null) return null
+
+  const nftItemId = avatar.nftItemId ?? Number(avatar.id)
+  return Number.isFinite(nftItemId) ? nftItemId : null
 }

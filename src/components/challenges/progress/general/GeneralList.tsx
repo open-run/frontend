@@ -24,7 +24,14 @@ async function GeneralList() {
             }
             title={challenge.challengeName}
             description={challenge.challengeDescription}
-            rewardStatusNode={<RewardStatus progress={challenge.currentCount} total={challenge.conditionCount} challengeId={challenge.challengeId} />}
+            rewardStatusNode={(
+              <RewardStatus
+                progress={challenge.currentCount}
+                total={challenge.conditionCount}
+                userChallengeId={challenge.userChallengeId}
+                nftCompleted={challenge.nftCompleted}
+              />
+            )}
           />
         )
       })}

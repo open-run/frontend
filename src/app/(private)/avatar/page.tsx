@@ -1,8 +1,14 @@
 import { Metadata } from 'next'
+import { Suspense } from 'react'
 import AvatarPage from '@components/avatar/AvatarPage'
+import AvatarPageSkeleton from '@components/avatar/AvatarPageSkeleton'
 
 export default function Page() {
-  return <AvatarPage />
+  return (
+    <Suspense fallback={<AvatarPageSkeleton />}>
+      <AvatarPage />
+    </Suspense>
+  )
 }
 
 export const metadata: Metadata = {

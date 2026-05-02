@@ -2,16 +2,9 @@ import Spacing from '@shared/Spacing'
 import { CalendarIcon } from '@icons/calendar'
 import { PlaceIcon } from '@icons/place'
 import { formatDate } from '@utils/time'
+import { DEFAULT_PROFILE_IMAGE_URL } from '@constants/profile'
 import { colors } from '@styles/colors'
 import Avatar from './Avatar'
-
-const participantList = [
-  '/temp/nft_participant_5.png',
-  '/temp/nft_participant_4.png',
-  '/temp/nft_participant_3.png',
-  '/temp/nft_participant_2.png',
-  '/temp/nft_participant_1.png',
-]
 
 export default function RecommendationCard({
   backgroundImageUrl,
@@ -20,6 +13,7 @@ export default function RecommendationCard({
   time,
   remainingCount,
   hashtags,
+  participantImageUrls,
 }: {
   backgroundImageUrl: string
   title: string
@@ -27,9 +21,11 @@ export default function RecommendationCard({
   time: string
   remainingCount: number
   hashtags: string[]
+  participantImageUrls: Array<string | null | undefined>
 }) {
   // 남은 시간을 상태로 관리
   const formattedDate = formatDate({ date: time, formatStr: 'M월 d일 (E) a h:mm', convertUTCtoLocale: true })
+  const participantList = participantImageUrls.slice(0, 5).map((imageUrl) => imageUrl || DEFAULT_PROFILE_IMAGE_URL)
 
   return (
     <article
@@ -49,7 +45,7 @@ export default function RecommendationCard({
       <Spacing size={12} />
       <div className='flex items-center'>
         {participantList.map((src, index) => (
-          <Avatar key={src} className={index !== 0 ? '-ml-12' : ''} imageSrc={src} size={35} />
+          <Avatar key={`${src}-${index}`} className={index !== 0 ? '-ml-12' : ''} imageSrc={src} size={35} />
         ))}
         <Spacing direction='horizontal' size={8} />
         <span>{remainingCount} 자리 남음</span>

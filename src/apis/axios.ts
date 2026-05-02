@@ -71,7 +71,7 @@ http.interceptors.response.use(
       console.log(`🚨 [API] ${method?.toUpperCase()} ${url} | Error ${message}`)
     }
 
-    return error
+    return Promise.reject(error)
   },
 )
 

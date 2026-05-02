@@ -17,6 +17,7 @@ import { FilledThumbIcon, OutlinedThumbIcon } from '@icons/thumb'
 import { UpperClothIcon } from '@icons/upper-cloth'
 import { useUserInfo } from '@apis/v1/users/query'
 import { MODAL_KEY } from '@constants/modal'
+import { DEFAULT_PROFILE_IMAGE_URL } from '@constants/profile'
 import { colors } from '@styles/colors'
 import SettingModal from './SettingModal'
 
@@ -44,7 +45,15 @@ export default function Profile() {
           </div>
         </header>
 
-        <Image className='mx-auto mb-16' src='/temp/nft_profile_avatar.png' alt='avatar' width={76} height={76} />
+        <div className='mx-auto mb-8 size-[88px] shrink-0 rounded-8 border border-gray bg-white'>
+          <Image
+            className='size-full object-contain'
+            src={data?.data.profileImageUrl || DEFAULT_PROFILE_IMAGE_URL}
+            alt='avatar'
+            width={88}
+            height={88}
+          />
+        </div>
         <h4 className='mb-4 text-center text-16 font-bold'>{data?.data.nickname}</h4>
         <AddressClipboard>
           {(address) => (
