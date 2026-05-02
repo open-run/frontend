@@ -1147,6 +1147,65 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@openrun/web@workspace:apps/web":
+  version: 0.0.0-use.local
+  resolution: "@openrun/web@workspace:apps/web"
+  dependencies:
+    "@reown/appkit": "npm:1.7.8"
+    "@reown/appkit-adapter-wagmi": "npm:1.7.8"
+    "@reown/appkit-wallet-button": "npm:1.7.8"
+    "@tanstack/react-query": "npm:^5.83.0"
+    "@trivago/prettier-plugin-sort-imports": "npm:^5.2.2"
+    "@types/navermaps": "npm:^3.7.5"
+    "@types/node": "npm:^20"
+    "@types/qrcode": "npm:^1"
+    "@types/qs": "npm:^6"
+    "@types/react": "npm:^18"
+    "@types/react-copy-to-clipboard": "npm:^5"
+    "@types/react-dom": "npm:^18"
+    "@vis.gl/react-google-maps": "npm:^1.5.2"
+    "@wagmi/core": "npm:2.22.1"
+    autoprefixer: "npm:^10.4.17"
+    axios: "npm:^1.6.7"
+    clsx: "npm:^2.1.1"
+    concurrently: "npm:^8.2.2"
+    date-fns: "npm:^3.6.0"
+    date-fns-tz: "npm:^3.2.0"
+    eruda: "npm:^3.4.3"
+    eslint: "npm:^8"
+    eslint-config-next: "npm:^15.5.3"
+    eslint-config-prettier: "npm:^9.1.0"
+    framer-motion: "npm:^11.0.6"
+    fuse.js: "npm:^7.0.0"
+    html2canvas: "npm:^1.4.1"
+    next: "npm:15.5.9"
+    nuqs: "npm:^2.6.0"
+    pino-pretty: "npm:^13.0.0"
+    postcss: "npm:^8.4.33"
+    prettier: "npm:^3.3.2"
+    prettier-plugin-tailwindcss: "npm:^0.5.9"
+    qrcode: "npm:1.5.3"
+    qs: "npm:^6.14.0"
+    react: "npm:^19.1.1"
+    react-cookie: "npm:^7.1.4"
+    react-copy-to-clipboard: "npm:^5.1.0"
+    react-day-picker: "npm:^9.1.3"
+    react-dom: "npm:^19.1.1"
+    react-hook-form: "npm:^7.54.2"
+    react-icons: "npm:5.5.0"
+    react-intersection-observer: "npm:^9.16.0"
+    react-query: "npm:^3.39.3"
+    server-only: "npm:^0.0.1"
+    swiper: "npm:^11.2.8"
+    tailwindcss: "npm:^3.4.1"
+    typescript: "npm:^5"
+    viem: "npm:^2.44.4"
+    wagmi: "npm:^2.15.0"
+    webpack: "npm:^5.90.2"
+    zustand: "npm:^4.5.1"
+  languageName: unknown
+  linkType: soft
+
 "@paulmillr/qr@npm:^0.2.1":
   version: 0.2.1
   resolution: "@paulmillr/qr@npm:0.2.1"
@@ -2288,6 +2347,48 @@ __metadata:
     svelte:
       optional: true
   checksum: 2a4f0464f1f5a294bcd34558fb053f8263f0c62c4a7fcdd3ce40c9822a68ac8b4d951700ab6d01eb3919efe0ed44e4191997edd494d59679b22db1c0db00474e
+  languageName: node
+  linkType: hard
+
+"@turbo/darwin-64@npm:2.9.7":
+  version: 2.9.7
+  resolution: "@turbo/darwin-64@npm:2.9.7"
+  conditions: os=darwin & cpu=x64
+  languageName: node
+  linkType: hard
+
+"@turbo/darwin-arm64@npm:2.9.7":
+  version: 2.9.7
+  resolution: "@turbo/darwin-arm64@npm:2.9.7"
+  conditions: os=darwin & cpu=arm64
+  languageName: node
+  linkType: hard
+
+"@turbo/linux-64@npm:2.9.7":
+  version: 2.9.7
+  resolution: "@turbo/linux-64@npm:2.9.7"
+  conditions: os=linux & cpu=x64
+  languageName: node
+  linkType: hard
+
+"@turbo/linux-arm64@npm:2.9.7":
+  version: 2.9.7
+  resolution: "@turbo/linux-arm64@npm:2.9.7"
+  conditions: os=linux & cpu=arm64
+  languageName: node
+  linkType: hard
+
+"@turbo/windows-64@npm:2.9.7":
+  version: 2.9.7
+  resolution: "@turbo/windows-64@npm:2.9.7"
+  conditions: os=win32 & cpu=x64
+  languageName: node
+  linkType: hard
+
+"@turbo/windows-arm64@npm:2.9.7":
+  version: 2.9.7
+  resolution: "@turbo/windows-arm64@npm:2.9.7"
+  conditions: os=win32 & cpu=arm64
   languageName: node
   linkType: hard
 
@@ -7471,65 +7572,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"open-run@workspace:.":
-  version: 0.0.0-use.local
-  resolution: "open-run@workspace:."
-  dependencies:
-    "@reown/appkit": "npm:1.7.8"
-    "@reown/appkit-adapter-wagmi": "npm:1.7.8"
-    "@reown/appkit-wallet-button": "npm:1.7.8"
-    "@tanstack/react-query": "npm:^5.83.0"
-    "@trivago/prettier-plugin-sort-imports": "npm:^5.2.2"
-    "@types/navermaps": "npm:^3.7.5"
-    "@types/node": "npm:^20"
-    "@types/qrcode": "npm:^1"
-    "@types/qs": "npm:^6"
-    "@types/react": "npm:^18"
-    "@types/react-copy-to-clipboard": "npm:^5"
-    "@types/react-dom": "npm:^18"
-    "@vis.gl/react-google-maps": "npm:^1.5.2"
-    "@wagmi/core": "npm:2.22.1"
-    autoprefixer: "npm:^10.4.17"
-    axios: "npm:^1.6.7"
-    clsx: "npm:^2.1.1"
-    concurrently: "npm:^8.2.2"
-    date-fns: "npm:^3.6.0"
-    date-fns-tz: "npm:^3.2.0"
-    eruda: "npm:^3.4.3"
-    eslint: "npm:^8"
-    eslint-config-next: "npm:^15.5.3"
-    eslint-config-prettier: "npm:^9.1.0"
-    framer-motion: "npm:^11.0.6"
-    fuse.js: "npm:^7.0.0"
-    html2canvas: "npm:^1.4.1"
-    next: "npm:15.5.9"
-    nuqs: "npm:^2.6.0"
-    pino-pretty: "npm:^13.0.0"
-    postcss: "npm:^8.4.33"
-    prettier: "npm:^3.3.2"
-    prettier-plugin-tailwindcss: "npm:^0.5.9"
-    qrcode: "npm:1.5.3"
-    qs: "npm:^6.14.0"
-    react: "npm:^19.1.1"
-    react-cookie: "npm:^7.1.4"
-    react-copy-to-clipboard: "npm:^5.1.0"
-    react-day-picker: "npm:^9.1.3"
-    react-dom: "npm:^19.1.1"
-    react-hook-form: "npm:^7.54.2"
-    react-icons: "npm:5.5.0"
-    react-intersection-observer: "npm:^9.16.0"
-    react-query: "npm:^3.39.3"
-    server-only: "npm:^0.0.1"
-    swiper: "npm:^11.2.8"
-    tailwindcss: "npm:^3.4.1"
-    typescript: "npm:^5"
-    viem: "npm:^2.44.4"
-    wagmi: "npm:^2.15.0"
-    webpack: "npm:^5.90.2"
-    zustand: "npm:^4.5.1"
-  languageName: unknown
-  linkType: soft
-
 "openapi-fetch@npm:^0.13.5":
   version: 0.13.8
   resolution: "openapi-fetch@npm:0.13.8"
@@ -7545,6 +7587,14 @@ __metadata:
   checksum: 5eb68d487b787e3e31266470b1a310726549dd45a1079655ab18066ab291b0b3c343fdf629991013706a2329b86964f8798d56ef0272b94b931fe6c19abd7a88
   languageName: node
   linkType: hard
+
+"openrun-monorepo@workspace:.":
+  version: 0.0.0-use.local
+  resolution: "openrun-monorepo@workspace:."
+  dependencies:
+    turbo: "npm:^2.3.0"
+  languageName: unknown
+  linkType: soft
 
 "optionator@npm:^0.9.3":
   version: 0.9.4
@@ -9586,6 +9636,35 @@ __metadata:
   version: 2.8.1
   resolution: "tslib@npm:2.8.1"
   checksum: 9c4759110a19c53f992d9aae23aac5ced636e99887b51b9e61def52611732872ff7668757d4e4c61f19691e36f4da981cd9485e869b4a7408d689f6bf1f14e62
+  languageName: node
+  linkType: hard
+
+"turbo@npm:^2.3.0":
+  version: 2.9.7
+  resolution: "turbo@npm:2.9.7"
+  dependencies:
+    "@turbo/darwin-64": "npm:2.9.7"
+    "@turbo/darwin-arm64": "npm:2.9.7"
+    "@turbo/linux-64": "npm:2.9.7"
+    "@turbo/linux-arm64": "npm:2.9.7"
+    "@turbo/windows-64": "npm:2.9.7"
+    "@turbo/windows-arm64": "npm:2.9.7"
+  dependenciesMeta:
+    "@turbo/darwin-64":
+      optional: true
+    "@turbo/darwin-arm64":
+      optional: true
+    "@turbo/linux-64":
+      optional: true
+    "@turbo/linux-arm64":
+      optional: true
+    "@turbo/windows-64":
+      optional: true
+    "@turbo/windows-arm64":
+      optional: true
+  bin:
+    turbo: bin/turbo
+  checksum: 5fa010810ce251279dac83db02e60ebd8014cf8e74e69a6c09751ae28aef0fdb95aa09b059ce8c987a1746dd5b04bb3002bd7fdcb6d0016d8690f079fec43921
   languageName: node
   linkType: hard
 
