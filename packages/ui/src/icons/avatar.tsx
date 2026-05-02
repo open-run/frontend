@@ -1,4 +1,4 @@
-import { colors } from '@styles/colors'
+import { colors } from '../styles/colors'
 
 const FOCUSED_COLOR = colors.black.darken
 const UNFOCUSED_COLOR = colors.gray.darkest

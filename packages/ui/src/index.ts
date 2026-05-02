@@ -1,3 +1,5 @@
 export { default as LoadingLogo } from './LoadingLogo'
 export { default as RarityIcon } from './RarityIcon'
+export { default as Avatar } from './Avatar'
+export { default as Category } from './Category'
 export * from './Modal'
