@@ -1,5 +1,5 @@
 import { useQuery } from '@tanstack/react-query'
-import { QueryOptions } from '@type/react-query'
+import { QueryOptions } from '@openrun/types'
 import {
   AdminChallengeResponse,
   AdminChallengesResponse,

@@ -18,8 +18,8 @@ import {
   useUpdateAdminChallengeMutation,
 } from '@apis/v1/admin/mutation'
 import { ADMIN_CHALLENGES_QUERY_KEY, useAdminChallengesQuery } from '@apis/v1/admin/query'
-import { ApiResponse } from '@apis/type'
-import LoadingLogo from '@shared/LoadingLogo'
+import { ApiResponse } from '@openrun/api-client'
+import { LoadingLogo } from '@openrun/ui'
 
 type SelectedChallengeId = number | 'new' | null
 

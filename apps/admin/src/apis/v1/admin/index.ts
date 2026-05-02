@@ -1,6 +1,6 @@
-import http from '@apis/axios'
-import { ApiResponse } from '@apis/type'
-import { Avatar, MainCategory, Rarity, SubCategory } from '@type/avatar'
+import http from '@openrun/api-client'
+import { ApiResponse } from '@openrun/api-client'
+import { Avatar, MainCategory, Rarity, SubCategory } from '@openrun/types'
 
 export type AdminChallengeType = 'tuto' | 'normal' | 'hidden' | 'repetitive'
 export type AdminRewardType = 'face' | 'hair' | 'accessory' | 'top' | 'bottom' | 'footwear' | 'pairs' | 'skin'
