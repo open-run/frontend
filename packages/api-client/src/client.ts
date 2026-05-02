@@ -1,5 +1,4 @@
 import axios, { AxiosError, AxiosHeaders, AxiosRequestConfig, AxiosResponse } from 'axios'
-import { Cookies } from 'react-cookie'
 
 export type { ApiResponse, Pagination, PaginationResponse } from './type'
 
@@ -10,7 +9,17 @@ export const COOKIE = {
 const isDev = process.env.NODE_ENV !== 'production'
 const log: (...args: unknown[]) => void = isDev ? console.log.bind(console) : () => {}
 
-const cookies = new Cookies()
+function readBrowserCookie(name: string): string | undefined {
+  if (typeof document === 'undefined') return undefined
+  const match = document.cookie.split('; ').find((row) => row.startsWith(`${name}=`))
+  if (!match) return undefined
+  const value = match.slice(name.length + 1)
+  try {
+    return decodeURIComponent(value)
+  } catch {
+    return value
+  }
+}
 
 type ApiClientConfig = {
   baseURL?: string
@@ -41,7 +50,7 @@ export function createApiClient({ baseURL, cookieName = COOKIE.ACCESSTOKEN }: Ap
         token = undefined
       }
     } else {
-      token = cookies.get(cookieName)
+      token = readBrowserCookie(cookieName)
     }
 
     if (token != null) {

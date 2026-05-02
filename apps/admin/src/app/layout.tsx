@@ -1,6 +1,12 @@
 import type { Metadata } from 'next'
+import { Jost } from 'next/font/google'
 import ReactQueryProvider from '@contexts/ReactQueryProvider'
 import '@/styles/globals.css'
+
+const jost = Jost({
+  subsets: ['latin'],
+  variable: '--font-jost',
+})
 
 export const metadata: Metadata = {
   title: 'OpenRun Admin',
@@ -10,7 +16,7 @@ export const metadata: Metadata = {
 export default function AdminRootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang='ko'>
-      <body suppressHydrationWarning>
+      <body suppressHydrationWarning className={jost.variable}>
         <ReactQueryProvider>{children}</ReactQueryProvider>
       </body>
     </html>

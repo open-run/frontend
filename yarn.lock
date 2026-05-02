@@ -1169,10 +1169,11 @@ __metadata:
   resolution: "@openrun/api-client@workspace:packages/api-client"
   dependencies:
     axios: "npm:^1.6.7"
-    react-cookie: "npm:^7.1.4"
     typescript: "npm:^5"
   peerDependencies:
     next: ^15.0.0
+    react: ^19.0.0
+    react-cookie: ^7.0.0
   peerDependenciesMeta:
     next:
       optional: true

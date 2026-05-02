@@ -1,0 +1,7 @@
+{
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "buildCommand": "cd ../.. && yarn turbo run build --filter=@openrun/web",
+  "installCommand": "yarn install",
+  "outputDirectory": ".next",
+  "framework": "nextjs"
+}

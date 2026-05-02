@@ -11,3 +11,35 @@ body {
   font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial,
     'Noto Sans KR', sans-serif;
 }
+
+@layer components {
+  .rarity-common {
+    background: linear-gradient(274deg, #dee2e6 0%, #adb5bd 100%);
+    background-clip: text;
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+
+  .rarity-rare {
+    background: linear-gradient(274deg, #89939d 0%, #4a5cef 100%);
+    background-clip: text;
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+
+  .rarity-epic {
+    background: linear-gradient(274deg, #9d61c2 0%, #f06595 100%);
+    background-clip: text;
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+
+  .scrollbar-hidden {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+
+  .scrollbar-hidden::-webkit-scrollbar {
+    display: none;
+  }
+}
