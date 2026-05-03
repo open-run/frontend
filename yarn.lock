@@ -1146,6 +1146,7 @@ __metadata:
     "@openrun/ui": "workspace:*"
     "@reown/appkit": "npm:1.7.8"
     "@reown/appkit-adapter-wagmi": "npm:1.7.8"
+    "@reown/appkit-controllers": "npm:1.7.8"
     "@tanstack/react-query": "npm:^5.83.0"
     "@types/node": "npm:^20"
     "@types/react": "npm:^18"
