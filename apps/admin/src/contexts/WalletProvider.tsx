@@ -6,7 +6,8 @@ import { WagmiAdapter } from '@reown/appkit-adapter-wagmi'
 import { type ReactNode } from 'react'
 import { type State, WagmiProvider } from 'wagmi'
 
-const projectId = process.env.NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID?.trim() || ''
+const projectId =
+  process.env.NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID?.trim() || 'ad41cd1ed822293016042e1a5bc4b5f2'
 const networks = [base, baseSepolia] as [AppKitNetwork, ...AppKitNetwork[]]
 
 const wagmiAdapter = new WagmiAdapter({
