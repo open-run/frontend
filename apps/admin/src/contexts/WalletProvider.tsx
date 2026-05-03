@@ -25,8 +25,8 @@ createAppKit({
   features: {
     analytics: false,
     email: false,
-    emailShowWallets: false,
-    socials: false,
+    emailShowWallets: true,
+    socials: ['google', 'apple', 'discord', 'github'],
   },
   metadata: {
     name: 'Open Run Admin',
