@@ -18,17 +18,19 @@ export default function AdminSignInPage() {
   const { open } = useAppKit()
   const { address, isConnected, status } = useAppKitAccount({ namespace: 'eip155' })
   const { disconnect } = useDisconnect()
-  const hasRequestedLoginRef = useRef(false)
+  const [hasInitiated, setHasInitiated] = useState(false)
   const [errorMessage, setErrorMessage] = useState<string | null>(null)
+  const hasMutatedRef = useRef(false)
 
-  const loginMutation = useMutation<SmartWalletLoginResponse, Error, string>({
+  const { mutate, isPending } = useMutation<SmartWalletLoginResponse, Error, string>({
     mutationFn: (walletAddress: string) => smartWalletLogin({ code: walletAddress }),
     onSuccess: ({ data }) => {
       setCookie(COOKIE.ACCESSTOKEN, data.jwtToken, 60 * 60 * 6)
       router.replace('/')
     },
     onError: (error: Error) => {
-      hasRequestedLoginRef.current = false
+      hasMutatedRef.current = false
+      setHasInitiated(false)
       setErrorMessage(getErrorMessage(error))
     },
   })
@@ -40,18 +42,21 @@ export default function AdminSignInPage() {
   }, [])
 
   useEffect(() => {
-    if (!hasRequestedLoginRef.current || !isConnected || !address) return
-    if (loginMutation.isPending) return
-    loginMutation.mutate(address)
-  }, [address, isConnected, loginMutation])
+    if (!hasInitiated || !isConnected || !address) return
+    if (isPending || hasMutatedRef.current) return
+    hasMutatedRef.current = true
+    mutate(address)
+  }, [hasInitiated, isConnected, address, isPending, mutate])
 
   const handleConnectClick = () => {
     setErrorMessage(null)
-    hasRequestedLoginRef.current = true
+    hasMutatedRef.current = false
+    setHasInitiated(true)
     open()
   }
 
-  const isPending = loginMutation.isPending || (hasRequestedLoginRef.current && status === 'connecting')
+  const isLoading =
+    isPending || (hasInitiated && (status === 'connecting' || status === 'reconnecting'))
 
   return (
     <main className='flex min-h-dvh flex-col items-center justify-center bg-gray-lighten px-16'>
@@ -64,9 +69,9 @@ export default function AdminSignInPage() {
         <button
           type='button'
           className='flex h-48 w-full items-center justify-center rounded-8 bg-primary text-15 font-bold text-white active:bg-primary-darken disabled:bg-gray disabled:text-gray-lighten'
-          disabled={isPending}
+          disabled={isLoading}
           onClick={handleConnectClick}>
-          {isPending ? <LoadingLogo className='w-120' /> : '지갑 연결하고 로그인'}
+          {isLoading ? <LoadingLogo className='w-120' /> : '지갑 연결하고 로그인'}
         </button>
 
         {errorMessage && (
