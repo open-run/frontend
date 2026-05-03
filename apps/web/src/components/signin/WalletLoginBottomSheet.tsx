@@ -97,11 +97,13 @@ type WalletLoginBottomSheetProps = {
   onCancel: () => void
 }
 
-const CONNECT_SHEET_HEIGHT = 'min(616px, calc(100dvh - 24px))'
-const SEARCH_SHEET_HEIGHT = 'min(720px, calc(100dvh - 24px))'
-const WALLET_CONNECT_SHEET_HEIGHT = 'min(620px, calc(100dvh - 24px))'
-const EXTERNAL_WALLET_SHEET_HEIGHT = 'min(520px, calc(100dvh - 24px))'
-const SOCIAL_WALLET_SHEET_HEIGHT = 'min(520px, calc(100dvh - 24px))'
+// 데스크탑 phone-mockup 안 portal에서 100dvh가 viewport 기준이라 부모(베젤 영역)를 초과하므로
+// 부모 기준(100%)을 사용한다. 모바일에서도 portal 부모가 h-dvh main이라 동일 크기로 동작.
+const CONNECT_SHEET_HEIGHT = 'min(616px, calc(100% - 24px))'
+const SEARCH_SHEET_HEIGHT = 'min(720px, calc(100% - 24px))'
+const WALLET_CONNECT_SHEET_HEIGHT = 'min(620px, calc(100% - 24px))'
+const EXTERNAL_WALLET_SHEET_HEIGHT = 'min(520px, calc(100% - 24px))'
+const SOCIAL_WALLET_SHEET_HEIGHT = 'min(520px, calc(100% - 24px))'
 const INITIAL_WALLET_SKELETON_COUNT = 12
 const LOAD_MORE_WALLET_SKELETON_COUNT = 6
 const QR_CODE_MARGIN_MODULES = 8

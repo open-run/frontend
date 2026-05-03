@@ -2,6 +2,7 @@
 
 import { ReactNode, useEffect, useState } from 'react'
 import { usePathname } from 'next/navigation'
+import { ROOT_PORTAL_ID } from '@constants/layout'
 import MarketingLayout from './MarketingLayout'
 
 export default function Layout({ children }: { children: ReactNode }) {
@@ -9,12 +10,8 @@ export default function Layout({ children }: { children: ReactNode }) {
   const [isDesktop, setIsDesktop] = useState(true)
 
   useEffect(() => {
-    // iframe 내부에서는 항상 모바일(앱) 뷰를 표시
-    // → MarketingLayout의 iframe이 같은 URL을 로드할 때 마케팅 화면이 중첩되는 것을 방지
-    const isInIframe = window.self !== window.top
-
     const checkScreenSize = () => {
-      setIsDesktop(!isInIframe && window.innerWidth >= 576)
+      setIsDesktop(window.innerWidth >= 576)
     }
 
     checkScreenSize()
@@ -23,22 +20,29 @@ export default function Layout({ children }: { children: ReactNode }) {
   }, [])
 
   if (pathname.startsWith('/admin')) {
-    return <main className='h-dvh w-dvw overflow-hidden'>{children}</main>
-  }
-
-  // 576px 이상 & iframe이 아닌 경우: 마케팅 화면
-  if (isDesktop) {
     return (
-      <main className='h-dvh w-dvw'>
-        <MarketingLayout />
+      <main className='h-dvh w-dvw overflow-hidden'>
+        {children}
+        <div id={ROOT_PORTAL_ID} />
       </main>
     )
   }
 
-  // 576px 이하 또는 iframe 내부: 원래 Layout
+  // 576px 이상: 마케팅 화면 안 phone mockup에 children을 직접 렌더 (iframe self-embed 제거).
+  // 모달 portal은 MarketingLayout 내부 베젤 영역에 배치되어 fixed 자식이 mockup 안에 갇힌다.
+  if (isDesktop) {
+    return (
+      <main className='h-dvh w-dvw'>
+        <MarketingLayout>{children}</MarketingLayout>
+      </main>
+    )
+  }
+
+  // 576px 이하: 원래 모바일 Layout
   return (
     <main className='h-dvh w-dvw'>
       <section className='mx-auto h-full w-full max-w-tablet overflow-hidden'>{children}</section>
+      <div id={ROOT_PORTAL_ID} />
     </main>
   )
 }

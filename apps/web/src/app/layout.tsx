@@ -8,7 +8,6 @@ import { WalletProvider } from '@contexts/WalletProvider'
 import AppBridge from '@shared/AppBridge'
 import Layout from '@shared/Layout'
 import MintListener from '@components/challenges/rewards/MintListener'
-import { ROOT_PORTAL_ID } from '@constants/layout'
 import '@styles/globals.css'
 
 const jost = Jost({
@@ -34,7 +33,6 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             </GoogleMapContext>
           </WalletProvider>
         </ReactQueryProvider>
-        <div id={ROOT_PORTAL_ID} />
       </body>
     </html>
   )

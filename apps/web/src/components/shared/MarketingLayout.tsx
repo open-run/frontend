@@ -3,19 +3,18 @@
 import clsx from 'clsx'
 import { AnimatePresence, motion } from 'framer-motion'
 import Image from 'next/image'
-import { useCallback, useEffect, useRef, useState } from 'react'
+import { ReactNode, useCallback, useEffect, useRef, useState } from 'react'
 import LoadingLogo from '@components/shared/LoadingLogo'
+import { ROOT_PORTAL_ID } from '@constants/layout'
 import { BackgroundOpenrunIcon } from '@icons/openrun'
 import { colors } from '@styles/colors'
 
-export default function MarketingLayout() {
+// 기존에는 iframe 로드를 기다려 mockup이 등장했지만, 단일 React 트리로 옮기면 children mount가 즉시라
+// LoadingLogo가 시각적으로 보이지 않을 수 있다. 기존 UX 톤을 보존하기 위해 의도된 짧은 지연을 둔다.
+const APP_READY_DELAY_MS = 250
+
+export default function MarketingLayout({ children }: { children: ReactNode }) {
   const containerRef = useRef<HTMLDivElement>(null)
-  // SSR/초기 HTML에서는 window 없음 → iframe src=""로 나가 onLoad가 안정적으로 안 뜨는 경우 방지.
-  // 클라이언트 마운트 후에만 URL을 넣어 iframe을 한 번에 올바른 src로 마운트.
-  const [iframeUrl, setIframeUrl] = useState<string | null>(null)
-  useEffect(() => {
-    setIframeUrl(window.location.href.replace(/\/+$/, ''))
-  }, [])
 
   // 고정 크기 설정 - iPhone 15 Pro Max 크기와 동일
   const MOCKUP_WIDTH = 430 // iPhone 15 Pro Max 너비
@@ -26,26 +25,31 @@ export default function MarketingLayout() {
   const scale = screenWidth / IPHONE_WIDTH
 
   const [mockupY, setMockupY] = useState('100%')
-  const [isIframeLoaded, setIsIframeLoaded] = useState(false)
+  const [isAppReady, setIsAppReady] = useState(false)
   const [isRevealed, setIsRevealed] = useState(false)
   const [isMockupAnimating, setIsMockupAnimating] = useState(false)
   const [canClickToReveal, setCanClickToReveal] = useState(false) // 30%까지 올라온 뒤에만 클릭 허용
   const hasClickedRef = useRef(false)
-  const mockupDelayRef = useRef<ReturnType<typeof setTimeout> | null>(null)
-
-  const handleIframeLoad = useCallback(() => {
-    setIsIframeLoaded(true)
-    // 로딩 로고 exit(0.3s)가 끝난 뒤 목업이 올라오도록 지연 → 동시 애니메이션으로 인한 끊김 방지
-    setIsMockupAnimating(true)
-    mockupDelayRef.current = setTimeout(() => {
-      setMockupY('30%')
-      mockupDelayRef.current = null
-    }, 320)
-  }, [])
+  const mockupDelayRef = useRef<number | null>(null)
 
   useEffect(() => {
+    let cancelled = false
+    const readyTimer = window.setTimeout(() => {
+      if (cancelled) return
+      setIsAppReady(true)
+      setIsMockupAnimating(true)
+      // 로딩 로고 exit(0.3s)가 끝난 뒤 목업이 올라오도록 지연 → 동시 애니메이션으로 인한 끊김 방지
+      mockupDelayRef.current = window.setTimeout(() => {
+        if (cancelled) return
+        setMockupY('30%')
+        mockupDelayRef.current = null
+      }, 320)
+    }, APP_READY_DELAY_MS)
+
     return () => {
-      if (mockupDelayRef.current) clearTimeout(mockupDelayRef.current)
+      cancelled = true
+      window.clearTimeout(readyTimer)
+      if (mockupDelayRef.current != null) window.clearTimeout(mockupDelayRef.current)
     }
   }, [])
 
@@ -152,9 +156,9 @@ export default function MarketingLayout() {
         )}
       </AnimatePresence>
 
-      {/* iframe 로드 전: 로딩 화면(LoadingLogo) 표시 */}
+      {/* 앱 mount 직후의 짧은 페이크 로딩(LoadingLogo) — iframe load 대기 UX와 동일 톤 */}
       <AnimatePresence>
-        {!isIframeLoaded && (
+        {!isAppReady && (
           <motion.div
             className='absolute inset-0 z-10 flex items-center justify-center'
             initial={{ opacity: 1 }}
@@ -165,28 +169,21 @@ export default function MarketingLayout() {
         )}
       </AnimatePresence>
 
-      {/* iPhone Mockup - iframe 로드 후 30%까지 올라옴, 클릭 시 0%로 (GPU 레이어·paint containment으로 버벅임 최소화) */}
-      {/* 30% 도달 후 바운스 반복으로 클릭 유도 */}
-      <motion.div
+      {/* iPhone Mockup — vanilla CSS transform/transition으로 슬라이드 (framer-motion percentage transform과의
+          상호작용 이슈 회피). 100% → 30% 슬라이드 인, 클릭 시 30% → 0% 슬라이드 업. */}
+      <div
         className={clsx(
           'absolute z-20',
           canClickToReveal && !isRevealed && 'cursor-pointer transition-[filter] duration-300 hover:drop-shadow-[0_0_30px_rgba(255,255,255,0.6)]',
         )}
         onClick={handleBackgroundClick}
-        initial={{ y: '100%' }}
-        animate={canClickToReveal && !isRevealed ? { y: ['30%', '28%', '30%'] } : { y: mockupY }}
-        transition={
-          canClickToReveal && !isRevealed
-            ? { duration: 1.2, repeat: Infinity, ease: 'easeInOut' }
-            : { type: 'tween', duration: mockupY === '0%' ? 0.5 : 0.7, ease: [0.25, 0.1, 0.25, 1] }
-        }
-        onAnimationComplete={handleMockupAnimationComplete}
+        onTransitionEnd={handleMockupAnimationComplete}
         style={{
           height: '100vh',
           aspectRatio: '430/932',
           willChange: isMockupAnimating ? 'transform' : 'auto',
-          contain: 'layout paint',
-          backfaceVisibility: 'hidden' as const,
+          transform: `translateY(${mockupY})`,
+          transition: `transform ${mockupY === '0%' ? 500 : 700}ms cubic-bezier(0.25, 0.1, 0.25, 1)`,
         }}>
         <Image
           src='/images/marketing/img_mockup_iphone.png'
@@ -196,33 +193,36 @@ export default function MarketingLayout() {
           priority
         />
 
-        {/* iframe으로 실제 서비스 화면 표시 - 목업의 화면 영역에 정확히 맞춤 (클라이언트 전용 URL로만 마운트) */}
+        {/* 베젤 안 영역에 실제 앱(children)을 직접 렌더 — 더 이상 iframe을 쓰지 않는다.
+            scale 트릭은 그대로 두어 432×932 좌표계가 베젤 영역에 정확히 맞춰지도록 한다.
+            transform + contain으로 자식의 fixed positioning이 이 컨테이너 기준으로 격리된다. */}
         <div
-          className='absolute overflow-hidden'
+          className='absolute overflow-hidden rounded-[40px]'
           style={{
             top: '7.85%',
             left: '7.9%',
+            right: '7.9%',
+            bottom: '7.85%',
             contain: 'layout paint',
           }}>
-          {iframeUrl && (
-            <iframe
-              src={iframeUrl}
-              className='rounded-[50px] border-0'
-              title='OpenRun App Preview'
-              onLoad={handleIframeLoad}
-              style={{
-                aspectRatio: '432/932',
-                height: '100vh',
-                transform: `scale(${scale * 1.0})`,
-                transformOrigin: 'top left',
-              }}
-            />
-          )}
-
-          {/* reveal 전: iframe 위 투명 오버레이로 클릭 가로채기 / reveal 후: 제거하여 iframe 조작 허용 */}
+          <div
+            className='relative'
+            style={{
+              aspectRatio: '432/932',
+              height: '100vh',
+              transform: `scale(${scale * 1.0})`,
+              transformOrigin: 'top left',
+            }}>
+            {children}
+          </div>
+          {/* reveal 전: children 위 투명 오버레이로 클릭 가로채기 / reveal 후: 제거하여 조작 허용 */}
           {!isRevealed && <div className='absolute inset-0 z-10' />}
+          {/* 모달 portal: 베젤 안 영역 부모(contain: layout paint) 안에 둠 → portal 자식의
+              fixed positioning이 viewport가 아닌 이 영역을 containing block으로 사용 →
+              BottomSheet/Modal이 mockup 화면 영역 안에서 뜬다. */}
+          <div id={ROOT_PORTAL_ID} className='pointer-events-none absolute inset-0' />
         </div>
-      </motion.div>
+      </div>
     </div>
   )
 }

@@ -1,11 +1,7 @@
-import { ReactNode, useEffect, useState } from 'react'
-import { useAppKitAccount } from '@reown/appkit/react'
+import { ReactNode } from 'react'
 import { useModal } from '@contexts/ModalProvider'
-import { useAppStore } from '@store/app'
-import { postMessageToRN } from '@shared/AppBridge'
+import { useUserStore } from '@store/user'
 import ToastModal from '@shared/ToastModal'
-import { useMessageHandler } from '@hooks/useMessageHandler'
-import { MESSAGE } from '@constants/app'
 import { MODAL_KEY } from '@constants/modal'
 
 type Props = {
@@ -13,45 +9,15 @@ type Props = {
 }
 
 export default function AddressClipboard({ children }: Props) {
-  const { isApp } = useAppStore()
-
-  return isApp ? (
-    <AddressClipboardApp>{children}</AddressClipboardApp>
-  ) : (
-    <AddressClipboardBrowser>{children}</AddressClipboardBrowser>
-  )
-}
-
-function AddressClipboardApp({ children }: Props) {
-  const [address, setAddress] = useState('')
-
-  useMessageHandler(({ type, data }) => {
-    switch (type) {
-      case MESSAGE.RESPONSE_SMART_WALLET_CONNECT:
-        setAddress(data as string)
-        break
-    }
-  })
-
-  useEffect(() => {
-    if (address) return
-    postMessageToRN({ type: MESSAGE.REQUEST_SMART_WALLET_CONNECT })
-  }, [address])
-
-  return <CommonComponent address={address}>{children}</CommonComponent>
-}
-
-function AddressClipboardBrowser({ children }: Props) {
-  const { address } = useAppKitAccount({ namespace: 'eip155' })
-  return <CommonComponent address={address ?? ''}>{children}</CommonComponent>
-}
-
-function CommonComponent({ address, children }: { address: string; children: (address: string) => ReactNode }) {
   const { showModal } = useModal()
+  // 표시용 주소는 백엔드 user 정보에서 읽는다.
+  // (Reown wallet hook은 로그인/로그아웃 시점에만 사용 — 매 페이지 진입마다 wallet hydrate를 강제하지 않기 위함.)
+  const blockchainAddress = useUserStore((state) => state.userInfo.blockchainAddress ?? '')
 
   const handleCopy = async () => {
+    if (!blockchainAddress) return
     try {
-      await navigator.clipboard.writeText(address)
+      await navigator.clipboard.writeText(blockchainAddress)
       showModal({
         key: MODAL_KEY.TOAST,
         component: <ToastModal mode='success' message='주소가 복사되었습니다.' />,
@@ -63,7 +29,7 @@ function CommonComponent({ address, children }: { address: string; children: (ad
 
   return (
     <div onClick={handleCopy} style={{ cursor: 'pointer' }}>
-      {children(formatAddress(address))}
+      {children(formatAddress(blockchainAddress))}
     </div>
   )
 }

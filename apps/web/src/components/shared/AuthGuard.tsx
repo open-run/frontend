@@ -1,21 +1,18 @@
 'use client'
 
-import { redirect, useRouter } from 'next/navigation'
-import { ReactNode, useEffect, useState } from 'react'
-import { useAppKitAccount } from '@reown/appkit/react'
-import { useAppStore } from '@store/app'
+import { useRouter } from 'next/navigation'
+import { ReactNode, useEffect } from 'react'
 import { useUserStore } from '@store/user'
-import { useMessageHandler } from '@hooks/useMessageHandler'
 import { useUserInfo } from '@apis/v1/users/query'
-import { MESSAGE } from '@constants/app'
-import { postMessageToRN } from './AppBridge'
+import { COOKIE } from '@constants/cookie'
+import { removeCookie } from '@utils/cookie'
+import LoadingLogo from './LoadingLogo'
 
 export default function AuthGuard({ children }: { children: ReactNode }) {
   const router = useRouter()
   const { userInfo, setUserInfo } = useUserStore()
-  const address = useCheckAddress()
 
-  useUserInfo({
+  const query = useUserInfo({
     onSuccess: ({ data }) => {
       if (data?.nickname == null) {
         router.replace('/signin')
@@ -25,54 +22,24 @@ export default function AuthGuard({ children }: { children: ReactNode }) {
     },
   })
 
-  if (userInfo.nickname == null || address === undefined) {
-    return null
-  }
+  // /v1/users가 retry 후에도 실패하면 (JWT 만료, 5xx, 네트워크 단절 등) 무한 LoadingLogo에 갇히지 않도록
+  // cookie를 정리하고 signin으로 보낸다. middleware는 쿠키 "존재"만 보므로 client-side에서 만료를 감지해야 한다.
+  useEffect(() => {
+    if (query.isError) {
+      removeCookie(COOKIE.ACCESSTOKEN)
+      router.replace('/signin')
+    }
+  }, [query.isError, router])
 
-  if (address === null) {
-    // redirect('/signin')
+  // 인증은 cookie의 JWT(middleware에서 검증)와 백엔드 user 정보로 충분하다.
+  // Reown wallet 상태는 더 이상 게이트에 영향을 주지 않는다 — wallet은 로그인/로그아웃 시점에만 사용된다.
+  if (userInfo.nickname == null) {
+    return (
+      <div className='flex h-full w-full items-center justify-center bg-gradient-primary-white'>
+        <LoadingLogo className='text-white' />
+      </div>
+    )
   }
 
   return children
-}
-
-function useCheckAddress() {
-  const { isApp } = useAppStore()
-  const appAddress = useAppCheckAddress()
-  const browserAddress = useBrowserCheckAddress()
-
-  return isApp ? appAddress : browserAddress
-}
-
-function useAppCheckAddress() {
-  const { isApp } = useAppStore()
-  const [address, setAddress] = useState<string | null>()
-
-  useMessageHandler(({ type, data }) => {
-    switch (type) {
-      case MESSAGE.RESPONSE_SMART_WALLET_CONNECT:
-        setAddress(data)
-        break
-
-      case MESSAGE.RESPONSE_SMART_WALLET_CONNECT_ERROR:
-        setAddress(null)
-        break
-    }
-  })
-
-  useEffect(() => {
-    if (isApp) postMessageToRN({ type: MESSAGE.REQUEST_SMART_WALLET_CONNECT })
-  }, [isApp])
-
-  return address
-}
-
-function useBrowserCheckAddress() {
-  const { address, isConnected, status } = useAppKitAccount({ namespace: 'eip155' })
-
-  if (status === 'connecting' || status === 'reconnecting') {
-    return undefined
-  }
-
-  return isConnected && address ? address : null
 }

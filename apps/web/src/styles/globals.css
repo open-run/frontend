@@ -36,3 +36,11 @@
     display: none;
   }
 }
+
+/* Modal portal: 컨테이너는 pointer-events:none이지만 자식 모달은 인터랙션 가능해야 한다.
+   (데스크탑 phone-mockup 안에 portal을 두기 위해 absolute inset-0 + pointer-events-none으로
+    빈 영역에서 mockup 클릭이 차단되지 않도록 처리하는 것에 대응) */
+#root-portal > * {
+  pointer-events: auto;
+}
+
