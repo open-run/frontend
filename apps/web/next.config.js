@@ -14,6 +14,12 @@ const nextConfig = {
       },
       {
         protocol: 'https',
+        hostname: 'storage.googleapis.com',
+        port: '',
+        pathname: '/openrun-nft/**',
+      },
+      {
+        protocol: 'https',
         hostname: 'ipfs.io',
         port: '',
         pathname: '**',
