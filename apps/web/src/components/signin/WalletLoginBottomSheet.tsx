@@ -1,6 +1,7 @@
 'use client'
 
 import clsx from 'clsx'
+import { AnimatePresence, motion } from 'framer-motion'
 import Image from 'next/image'
 import QRCode from 'qrcode'
 import { ReactNode, useCallback, useEffect, useMemo, useRef, useState } from 'react'
@@ -22,6 +23,7 @@ import {
 } from '@reown/appkit-controllers'
 import { useModal } from '@contexts/ModalProvider'
 import { BottomSheet, BottomSheetRef, Dimmed } from '@shared/Modal'
+import ToastModal from '@shared/ToastModal'
 import { ArrowLeftIcon } from '@icons/arrow'
 import { BrokenXIcon } from '@icons/x'
 import { MagnifierIcon } from '@icons/magnifier'
@@ -170,7 +172,7 @@ export default function WalletLoginBottomSheet({
   onConnectSuccess,
   onCancel,
 }: WalletLoginBottomSheetProps) {
-  const { closeModal } = useModal()
+  const { showModal, closeModal } = useModal()
   const featuredWalletMetadata = useReownFeaturedWallets(FEATURED_WALLET_OPTIONS)
   const featuredWallets = featuredWalletMetadata.wallets
   const walletImages = useMemo(() => getWalletImagesFromMap(featuredWallets), [featuredWallets])
@@ -191,7 +193,6 @@ export default function WalletLoginBottomSheet({
   const [selectedAction, setSelectedAction] = useState<ConnectActionId | null>(null)
   const [selectedDirectoryWalletId, setSelectedDirectoryWalletId] = useState<string | null>(null)
   const [errorMessage, setErrorMessage] = useState<string | null>(null)
-  const [copyMessage, setCopyMessage] = useState<string | null>(null)
   const walletConnectState = useWalletConnectState(view === 'walletConnect')
   const sheetHeight =
     view === 'allWallets'
@@ -219,7 +220,6 @@ export default function WalletLoginBottomSheet({
       setSelectedAction(null)
       setSelectedDirectoryWalletId(null)
       setWalletConnectWallet(null)
-      setCopyMessage(null)
       connectionSettledRef.current = false
 
       if (shouldNotify) {
@@ -518,7 +518,6 @@ export default function WalletLoginBottomSheet({
       setSelectedDirectoryWalletId(wallet?.id ?? null)
       setWalletConnectWallet(wallet ?? null)
       setWalletConnectReturnView(returnView)
-      setCopyMessage(null)
       setErrorMessage(null)
       setView('walletConnect')
       onConnectStart()
@@ -659,8 +658,16 @@ export default function WalletLoginBottomSheet({
     if (walletConnectState.wcUri == null) return
 
     const didCopy = await copyText(walletConnectState.wcUri)
-    setCopyMessage(didCopy ? '링크를 복사했어요.' : '링크 복사에 실패했어요.')
-  }, [walletConnectState.wcUri])
+    showModal({
+      key: MODAL_KEY.TOAST,
+      component: (
+        <ToastModal
+          mode={didCopy ? 'success' : 'error'}
+          message={didCopy ? '링크를 복사했어요.' : '링크 복사에 실패했어요.'}
+        />
+      ),
+    })
+  }, [walletConnectState.wcUri, showModal])
 
   return (
     <Dimmed onClick={handleRequestClose}>
@@ -742,7 +749,6 @@ export default function WalletLoginBottomSheet({
               wallet={walletConnectWallet}
               wcUri={walletConnectState.wcUri}
               wcError={walletConnectState.wcError}
-              copyMessage={copyMessage}
               onCopy={handleCopyWalletConnectUri}
               onRetry={handleRetryWalletConnect}
             />
@@ -932,14 +938,12 @@ function WalletConnectContent({
   wallet,
   wcUri,
   wcError,
-  copyMessage,
   onCopy,
   onRetry,
 }: {
   wallet: WcWallet | null
   wcUri?: string
   wcError?: boolean
-  copyMessage: string | null
   onCopy: () => void
   onRetry: () => void
 }) {
@@ -984,12 +988,6 @@ function WalletConnectContent({
             <FiCopy size={18} />
             Copy link
           </button>
-        )}
-
-        {copyMessage != null && (
-          <p className='text-center text-12 font-medium text-gray-darker' aria-live='polite'>
-            {copyMessage}
-          </p>
         )}
       </div>
     </div>
