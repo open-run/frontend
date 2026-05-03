@@ -1,5 +1,6 @@
 import type { Metadata } from 'next'
 import { Jost } from 'next/font/google'
+import { WalletProvider } from '@contexts/WalletProvider'
 import ReactQueryProvider from '@contexts/ReactQueryProvider'
 import '@/styles/globals.css'
 
@@ -17,7 +18,9 @@ export default function AdminRootLayout({ children }: { children: React.ReactNod
   return (
     <html lang='ko'>
       <body suppressHydrationWarning className={jost.variable}>
-        <ReactQueryProvider>{children}</ReactQueryProvider>
+        <ReactQueryProvider>
+          <WalletProvider>{children}</WalletProvider>
+        </ReactQueryProvider>
       </body>
     </html>
   )

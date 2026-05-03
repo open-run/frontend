@@ -1144,10 +1144,13 @@ __metadata:
     "@openrun/api-client": "workspace:*"
     "@openrun/types": "workspace:*"
     "@openrun/ui": "workspace:*"
+    "@reown/appkit": "npm:1.7.8"
+    "@reown/appkit-adapter-wagmi": "npm:1.7.8"
     "@tanstack/react-query": "npm:^5.83.0"
     "@types/node": "npm:^20"
     "@types/react": "npm:^18"
     "@types/react-dom": "npm:^18"
+    "@wagmi/core": "npm:2.22.1"
     autoprefixer: "npm:^10.4.17"
     axios: "npm:^1.6.7"
     clsx: "npm:^2.1.1"
@@ -1157,10 +1160,11 @@ __metadata:
     next: "npm:15.5.9"
     postcss: "npm:^8.4.33"
     react: "npm:^19.1.1"
-    react-cookie: "npm:^7.1.4"
     react-dom: "npm:^19.1.1"
     tailwindcss: "npm:^3.4.1"
     typescript: "npm:^5"
+    viem: "npm:^2.44.4"
+    wagmi: "npm:^2.15.0"
   languageName: unknown
   linkType: soft
 
