@@ -1,7 +1,9 @@
 import type { Metadata } from 'next'
 import { Jost } from 'next/font/google'
-import { WalletProvider } from '@contexts/WalletProvider'
+import { ModalProvider } from '@contexts/ModalProvider'
 import ReactQueryProvider from '@contexts/ReactQueryProvider'
+import { WalletProvider } from '@contexts/WalletProvider'
+import { ROOT_PORTAL_ID } from '@constants/layout'
 import '@/styles/globals.css'
 
 const jost = Jost({
@@ -19,8 +21,11 @@ export default function AdminRootLayout({ children }: { children: React.ReactNod
     <html lang='ko'>
       <body suppressHydrationWarning className={jost.variable}>
         <ReactQueryProvider>
-          <WalletProvider>{children}</WalletProvider>
+          <WalletProvider>
+            <ModalProvider>{children}</ModalProvider>
+          </WalletProvider>
         </ReactQueryProvider>
+        <div id={ROOT_PORTAL_ID} />
       </body>
     </html>
   )

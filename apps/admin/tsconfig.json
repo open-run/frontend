@@ -1,12 +1,26 @@
 {
-  "extends": "./tsconfig.paths.json",
   "compilerOptions": {
+    "baseUrl": ".",
+    "paths": {
+      "@/*": ["src/*"],
+      "@components/*": ["src/components/*"],
+      "@contexts/*": ["src/contexts/*"],
+      "@apis/*": ["src/apis/*"],
+      "@constants/cookie": ["../../packages/api-client/src/cookie"],
+      "@constants/*": ["src/constants/*"],
+      "@icons/*": ["src/components/icons/*"],
+      "@shared/Modal": ["../../packages/ui/src/Modal"],
+      "@shared/LoadingLogo": ["../../packages/ui/src/LoadingLogo"],
+      "@shared/*": ["src/components/shared/*"],
+      "@styles/colors": ["../../packages/ui/src/styles/colors"],
+      "@styles/*": ["src/styles/*"],
+      "@utils/cookie": ["../../packages/api-client/src/cookie"],
+      "@utils/reownSocialRedirect": ["../../packages/api-client/src/reownSocialRedirect"],
+      "@utils/*": ["src/utils/*"],
+      "@type/*": ["../../packages/types/src/*"]
+    },
     "target": "ES2022",
-    "lib": [
-      "dom",
-      "dom.iterable",
-      "esnext"
-    ],
+    "lib": ["dom", "dom.iterable", "esnext"],
     "allowJs": true,
     "skipLibCheck": true,
     "strict": true,
@@ -24,13 +38,6 @@
       }
     ]
   },
-  "include": [
-    "next-env.d.ts",
-    "src/**/*.ts",
-    "src/**/*.tsx",
-    ".next/types/**/*.ts"
-  ],
-  "exclude": [
-    "node_modules"
-  ]
+  "include": ["next-env.d.ts", "src/**/*.ts", "src/**/*.tsx", ".next/types/**/*.ts"],
+  "exclude": ["node_modules"]
 }

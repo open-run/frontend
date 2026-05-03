@@ -23,13 +23,16 @@
     "clsx": "^2.1.1",
     "framer-motion": "^11.0.6",
     "next": "15.5.9",
+    "qrcode": "1.5.3",
     "react": "^19.1.1",
     "react-dom": "^19.1.1",
+    "react-icons": "5.5.0",
     "viem": "^2.44.4",
     "wagmi": "^2.15.0"
   },
   "devDependencies": {
     "@types/node": "^20",
+    "@types/qrcode": "^1",
     "@types/react": "^18",
     "@types/react-dom": "^18",
     "autoprefixer": "^10.4.17",
