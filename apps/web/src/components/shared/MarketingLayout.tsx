@@ -13,6 +13,11 @@ import { colors } from '@styles/colors'
 // LoadingLogo가 시각적으로 보이지 않을 수 있다. 기존 UX 톤을 보존하기 위해 의도된 짧은 지연을 둔다.
 const APP_READY_DELAY_MS = 250
 
+// 같은 브라우저 세션 안에서 mockup을 한 번 reveal 했는지 기록하는 sessionStorage 키.
+// OAuth redirect 복귀나 새로고침 시 처음부터 다시 100% → 30% 슬라이드를 거치지 않도록
+// 이미 reveal한 세션에서는 즉시 0% 가운데 위치 + reveal 상태로 시작한다.
+const REVEALED_KEY = 'openrun:marketing-revealed'
+
 export default function MarketingLayout({ children }: { children: ReactNode }) {
   const containerRef = useRef<HTMLDivElement>(null)
 
@@ -29,11 +34,31 @@ export default function MarketingLayout({ children }: { children: ReactNode }) {
   const [isRevealed, setIsRevealed] = useState(false)
   const [isMockupAnimating, setIsMockupAnimating] = useState(false)
   const [canClickToReveal, setCanClickToReveal] = useState(false) // 30%까지 올라온 뒤에만 클릭 허용
+  const [transitionEnabled, setTransitionEnabled] = useState(true) // 재방문 시 즉시 jump를 위해 일시 false로
   const hasClickedRef = useRef(false)
   const mockupDelayRef = useRef<number | null>(null)
 
   useEffect(() => {
     let cancelled = false
+
+    // 같은 세션에서 이미 reveal한 경우: 100% → 30% → 0% 흐름을 건너뛰고 즉시 가운데 + reveal 상태로 시작.
+    // CSS transition을 잠시 비활성화 → mockupY/isRevealed 동시 변경 → 슬라이드 애니메이션 없이 즉시 점프.
+    if (window.sessionStorage.getItem(REVEALED_KEY) === 'true') {
+      setTransitionEnabled(false)
+      setIsAppReady(true)
+      setMockupY('0%')
+      setIsRevealed(true)
+      // 다음 paint cycle 후 transition 재활성 (이후 추가 동작은 없지만 안전 차원)
+      requestAnimationFrame(() =>
+        requestAnimationFrame(() => {
+          if (!cancelled) setTransitionEnabled(true)
+        }),
+      )
+      return () => {
+        cancelled = true
+      }
+    }
+
     const readyTimer = window.setTimeout(() => {
       if (cancelled) return
       setIsAppReady(true)
@@ -59,6 +84,8 @@ export default function MarketingLayout({ children }: { children: ReactNode }) {
     setCanClickToReveal(false) // 바운스 애니메이션 중단
     setIsMockupAnimating(true)
     setMockupY('0%')
+    // 같은 세션의 새로고침/redirect 복귀 시 다시 0% 상태로 시작하도록 기록
+    window.sessionStorage.setItem(REVEALED_KEY, 'true')
   }
 
   const handleMockupAnimationComplete = useCallback(() => {
@@ -183,7 +210,9 @@ export default function MarketingLayout({ children }: { children: ReactNode }) {
           aspectRatio: '430/932',
           willChange: isMockupAnimating ? 'transform' : 'auto',
           transform: `translateY(${mockupY})`,
-          transition: `transform ${mockupY === '0%' ? 500 : 700}ms cubic-bezier(0.25, 0.1, 0.25, 1)`,
+          transition: transitionEnabled
+            ? `transform ${mockupY === '0%' ? 500 : 700}ms cubic-bezier(0.25, 0.1, 0.25, 1)`
+            : 'none',
         }}>
         <Image
           src='/images/marketing/img_mockup_iphone.png'
