@@ -11,7 +11,7 @@ import {
   GrantAdminNftAvatarItemRequest,
 } from '@apis/v1/admin'
 import { useGrantAdminNftAvatarItemMutation } from '@apis/v1/admin/mutation'
-import { useAdminMeQuery, useAdminNftAvatarItemsQuery, useAdminUsersQuery } from '@apis/v1/admin/query'
+import { useAdminNftAvatarItemsQuery, useAdminUsersQuery } from '@apis/v1/admin/query'
 import { ApiResponse } from '@openrun/api-client'
 import { MainCategory, SubCategory } from '@openrun/types'
 import { RarityIcon } from '@openrun/ui'
@@ -59,14 +59,12 @@ export default function AdminPage() {
   const [confirmOpen, setConfirmOpen] = useState(false)
   const [grantResult, setGrantResult] = useState<AdminNftGrantResult | null>(null)
 
-  const adminMeQuery = useAdminMeQuery()
-  const isAdmin = adminMeQuery.data?.data.admin === true
   const isGrantMenu = activeMenu === 'grant'
   const adminUsersQuery = useAdminUsersQuery({
-    enabled: isAdmin && isGrantMenu,
+    enabled: isGrantMenu,
   })
   const nftAvatarItemsQuery = useAdminNftAvatarItemsQuery({
-    enabled: isAdmin && isGrantMenu,
+    enabled: isGrantMenu,
   })
   const grantMutation = useGrantAdminNftAvatarItemMutation()
 
@@ -102,23 +100,6 @@ export default function AdminPage() {
         setConfirmOpen(false)
       },
     })
-  }
-
-  if (adminMeQuery.isLoading) {
-    return <AdminLoading />
-  }
-
-  if (!isAdmin) {
-    return (
-      <main className='h-full overflow-y-auto bg-gray-lighten px-16 py-40 app:pt-80'>
-        <section className='mx-auto flex max-w-[720px] flex-col gap-16 rounded-8 bg-white p-24 shadow-floating-primary'>
-          <h1 className='text-24 font-bold text-black'>OpenRun Admin</h1>
-          <div className='rounded-8 border border-pink/30 bg-pink/10 p-16 text-14 font-bold text-pink'>
-            접근 권한이 없습니다.
-          </div>
-        </section>
-      </main>
-    )
   }
 
   return (
@@ -599,14 +580,6 @@ function GrantResult({ result }: { result: AdminNftGrantResult }) {
       <p className='break-all font-jost text-12 text-black-darken'>{result.recipientAddress}</p>
       <p className='mt-4 break-all font-jost text-12 text-black-darken'>{result.transactionHash}</p>
     </section>
-  )
-}
-
-function AdminLoading() {
-  return (
-    <main className='flex min-h-full items-center justify-center bg-gray-lighten'>
-      <LoadingLogo />
-    </main>
   )
 }
 
