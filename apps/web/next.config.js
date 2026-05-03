@@ -45,6 +45,18 @@ const nextConfig = {
     }
     return config
   },
+  // Reown WalletConnect 소셜 로그인 popup이 OAuth 후 window.close()를 호출할 수 있도록
+  // COOP를 same-origin-allow-popups로 설정. opener-popup 격리는 유지되어 보안에 안전.
+  async headers() {
+    return [
+      {
+        source: '/:path*',
+        headers: [
+          { key: 'Cross-Origin-Opener-Policy', value: 'same-origin-allow-popups' },
+        ],
+      },
+    ]
+  },
   // compiler: {
   //   removeConsole: process.env.NODE_ENV === 'production' ? { exclude: ['error'] } : false,
   // },
