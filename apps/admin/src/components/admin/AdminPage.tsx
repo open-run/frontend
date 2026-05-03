@@ -3,7 +3,9 @@
 import clsx from 'clsx'
 import { AxiosError } from 'axios'
 import Image from 'next/image'
+import { useRouter } from 'next/navigation'
 import { useEffect, useMemo, useRef, useState } from 'react'
+import { useDisconnect } from '@reown/appkit/react'
 import {
   AdminNftAvatarItem,
   AdminNftGrantResult,
@@ -12,7 +14,7 @@ import {
 } from '@apis/v1/admin'
 import { useGrantAdminNftAvatarItemMutation } from '@apis/v1/admin/mutation'
 import { useAdminNftAvatarItemsQuery, useAdminUsersQuery } from '@apis/v1/admin/query'
-import { ApiResponse } from '@openrun/api-client'
+import { ApiResponse, COOKIE, removeCookie } from '@openrun/api-client'
 import { MainCategory, SubCategory } from '@openrun/types'
 import { RarityIcon } from '@openrun/ui'
 import { LoadingLogo } from '@openrun/ui'
@@ -52,12 +54,24 @@ const CATEGORY_FILTERS: {
 ]
 
 export default function AdminPage() {
+  const router = useRouter()
+  const { disconnect } = useDisconnect()
   const [activeMenu, setActiveMenu] = useState<AdminMenuKey>('grant')
   const [selectedUserId, setSelectedUserId] = useState<string | null>(null)
   const [selectedNftItemId, setSelectedNftItemId] = useState<number | null>(null)
   const [selectedCategoryKey, setSelectedCategoryKey] = useState<AdminCategoryFilterKey>('all')
   const [confirmOpen, setConfirmOpen] = useState(false)
   const [grantResult, setGrantResult] = useState<AdminNftGrantResult | null>(null)
+
+  const handleLogout = async () => {
+    removeCookie(COOKIE.ACCESSTOKEN)
+    try {
+      await disconnect({ namespace: 'eip155' })
+    } catch {
+      // disconnect가 실패해도 cookie 제거는 완료됐으니 로그아웃 진행
+    }
+    router.replace('/signin')
+  }
 
   const isGrantMenu = activeMenu === 'grant'
   const adminUsersQuery = useAdminUsersQuery({
@@ -106,11 +120,27 @@ export default function AdminPage() {
     <main className='h-full overflow-y-auto bg-gray-lighten px-16 pb-48 pt-24 app:pt-64'>
       <section className='mx-auto flex min-h-full max-w-[1040px] flex-col gap-16'>
         <header className='flex flex-col gap-12 rounded-8 bg-white p-20 shadow-floating-primary md:flex-row md:items-center md:justify-between'>
-          <div>
-            <h1 className='text-24 font-bold text-black'>OpenRun Admin</h1>
-            <p className='mt-4 text-13 text-gray-darkest'>NFT 아바타 운영</p>
+          <div className='flex items-start justify-between gap-12 md:items-center'>
+            <div>
+              <h1 className='text-24 font-bold text-black'>OpenRun Admin</h1>
+              <p className='mt-4 text-13 text-gray-darkest'>NFT 아바타 운영</p>
+            </div>
+            <button
+              type='button'
+              className='h-32 flex-shrink-0 rounded-8 border border-gray px-12 text-12 font-bold text-gray-darkest active:scale-95 hover:border-black/40 hover:text-black md:hidden'
+              onClick={handleLogout}>
+              로그아웃
+            </button>
           </div>
-          <AdminMenu activeMenu={activeMenu} onSelect={setActiveMenu} />
+          <div className='flex items-center gap-12'>
+            <AdminMenu activeMenu={activeMenu} onSelect={setActiveMenu} />
+            <button
+              type='button'
+              className='hidden h-36 flex-shrink-0 rounded-8 border border-gray px-12 text-12 font-bold text-gray-darkest active:scale-95 hover:border-black/40 hover:text-black md:inline-flex md:items-center'
+              onClick={handleLogout}>
+              로그아웃
+            </button>
+          </div>
         </header>
 
         {activeMenu === 'grant' ? (
