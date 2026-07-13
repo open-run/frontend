@@ -6,6 +6,7 @@ const swarmGatewayUrl = new URL(process.env.NEXT_PUBLIC_SWARM_GATEWAY_URL || 'ht
 
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  output: 'standalone',
   outputFileTracingRoot: path.join(__dirname, '../../'),
   transpilePackages: ['@openrun/types', '@openrun/api-client', '@openrun/ui'],
   allowedDevOrigins: ['laughably-unblended-tiera.ngrok-free.dev', '127.0.0.1'],
