@@ -28,25 +28,20 @@ RUN node .yarn/releases/yarn-4.0.2.cjs install --immutable
 # Source.
 COPY . .
 
-# Build-time (inlined) env: ARG -> ENV before `next build`.
-# turbo.json globalEnv declares NEXT_PUBLIC_* so Turbo 2 strict env-mode passes these through.
 ARG APP=web
-ARG NEXT_PUBLIC_API_SERVER_URL
-ARG NEXT_PUBLIC_SWARM_GATEWAY_URL
-ARG NEXT_PUBLIC_GOOGLE_MAPS_API_KEY
-ARG NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID
-ARG NEXT_PUBLIC_POSTHOG_KEY
-ARG NEXT_PUBLIC_POSTHOG_HOST
-ENV NEXT_PUBLIC_API_SERVER_URL=$NEXT_PUBLIC_API_SERVER_URL \
-    NEXT_PUBLIC_SWARM_GATEWAY_URL=$NEXT_PUBLIC_SWARM_GATEWAY_URL \
-    NEXT_PUBLIC_GOOGLE_MAPS_API_KEY=$NEXT_PUBLIC_GOOGLE_MAPS_API_KEY \
-    NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID=$NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID \
-    NEXT_PUBLIC_POSTHOG_KEY=$NEXT_PUBLIC_POSTHOG_KEY \
-    NEXT_PUBLIC_POSTHOG_HOST=$NEXT_PUBLIC_POSTHOG_HOST \
-    NEXT_TELEMETRY_DISABLED=1 \
+ENV NEXT_TELEMETRY_DISABLED=1 \
     TURBO_TELEMETRY_DISABLED=1
 
-RUN node_modules/.bin/turbo run build --filter=@openrun/${APP}
+# Build-time env is supplied as a BuildKit secret (id=appenv) — the whole prod .env
+# for this app. It is never baked into a layer. We materialize it as
+# apps/<APP>/.env.production so `next build` auto-loads it (inlining NEXT_PUBLIC_* into
+# the client bundle). `next build --output standalone` copies .env.production into
+# .next/standalone too, so we delete EVERY copy under apps/<APP> in the same RUN — the
+# source and the traced standalone copy — leaving no server-only key in any layer.
+RUN --mount=type=secret,id=appenv \
+    cp /run/secrets/appenv apps/${APP}/.env.production && \
+    node_modules/.bin/turbo run build --filter=@openrun/${APP} && \
+    find apps/${APP} -name '.env.production' -delete
 
 ########################################
 # Stage 2: runtime

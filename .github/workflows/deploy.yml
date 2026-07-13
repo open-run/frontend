@@ -13,7 +13,7 @@ concurrency:
 
 env:
   REGISTRY: asia-northeast3-docker.pkg.dev
-  IMAGE_BASE: asia-northeast3-docker.pkg.dev/openrun-452712/openrun-web
+  IMAGE_BASE: asia-northeast3-docker.pkg.dev/openrun-452712/openrun-frontend
 
 jobs:
   build:
@@ -33,6 +33,18 @@ jobs:
           username: _json_key_base64
           password: ${{ secrets.GCP_DEPLOYMENT_SA_KEY }}
 
+      # Decode the per-app env-file secret (base64) to a file on the runner. It is
+      # passed to the build as a BuildKit secret (not a build-arg / not a layer) and
+      # removed after. NEXT_PUBLIC_* inside it are inlined by `next build`.
+      - name: Decode env-file secret for ${{ matrix.app }}
+        env:
+          WEB_ENV: ${{ secrets.WEB_ENV }}
+          ADMIN_ENV: ${{ secrets.ADMIN_ENV }}
+        run: |
+          if [ "${{ matrix.app }}" = "web" ]; then printf '%s' "$WEB_ENV"; else printf '%s' "$ADMIN_ENV"; fi \
+            | base64 -d > appenv.production
+          test -s appenv.production || { echo "empty env-file secret for ${{ matrix.app }}"; exit 1; }
+
       - name: Build and push
         uses: docker/build-push-action@v6
         with:
@@ -40,17 +52,17 @@ jobs:
           push: true
           build-args: |
             APP=${{ matrix.app }}
-            NEXT_PUBLIC_API_SERVER_URL=${{ vars.NEXT_PUBLIC_API_SERVER_URL }}
-            NEXT_PUBLIC_SWARM_GATEWAY_URL=${{ vars.NEXT_PUBLIC_SWARM_GATEWAY_URL }}
-            NEXT_PUBLIC_GOOGLE_MAPS_API_KEY=${{ secrets.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY }}
-            NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID=${{ secrets.NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID }}
-            NEXT_PUBLIC_POSTHOG_KEY=${{ secrets.NEXT_PUBLIC_POSTHOG_KEY }}
-            NEXT_PUBLIC_POSTHOG_HOST=${{ vars.NEXT_PUBLIC_POSTHOG_HOST }}
+          secret-files: |
+            appenv=appenv.production
           tags: |
             ${{ env.IMAGE_BASE }}/${{ matrix.app }}:latest
             ${{ env.IMAGE_BASE }}/${{ matrix.app }}:${{ github.sha }}
           cache-from: type=gha,scope=${{ matrix.app }}
           cache-to: type=gha,mode=max,scope=${{ matrix.app }}
+
+      - name: Clean up decoded secret
+        if: always()
+        run: rm -f appenv.production
 
   deploy:
     needs: build
@@ -71,18 +83,18 @@ jobs:
           printf '%s' "$SA_KEY" | $SSH_CMD \
             'docker login -u _json_key_base64 --password-stdin https://asia-northeast3-docker.pkg.dev'
 
+      # Same per-app secret as the build, decoded straight into the runtime --env-file
+      # on the VM (mode 600). It already carries API_SERVER_URL=http://openrun:8080 and
+      # the server-only keys. Values must be unquoted/space-free (docker --env-file does
+      # not strip quotes) — enforced by the .env.production.example convention.
       - name: Write runtime env files on VM (via stdin, mode 600)
         env:
-          GOOGLE_API_KEY: ${{ secrets.GOOGLE_API_KEY }}
-          OPENWEATHER_API_KEY: ${{ secrets.OPENWEATHER_API_KEY }}
+          WEB_ENV: ${{ secrets.WEB_ENV }}
+          ADMIN_ENV: ${{ secrets.ADMIN_ENV }}
         run: |
-          {
-            printf 'API_SERVER_URL=%s\n' 'http://openrun:8080'
-            printf 'GOOGLE_API_KEY=%s\n' "$GOOGLE_API_KEY"
-            printf 'OPENWEATHER_API_KEY=%s\n' "$OPENWEATHER_API_KEY"
-          } | $SSH_CMD 'umask 077 && mkdir -p ~/openrun && cat > ~/openrun/web.env'
-
-          printf 'API_SERVER_URL=%s\n' 'http://openrun:8080' \
+          printf '%s' "$WEB_ENV" | base64 -d \
+            | $SSH_CMD 'umask 077 && mkdir -p ~/openrun && cat > ~/openrun/web.env'
+          printf '%s' "$ADMIN_ENV" | base64 -d \
             | $SSH_CMD 'umask 077 && mkdir -p ~/openrun && cat > ~/openrun/admin.env'
 
       - name: Deploy containers
@@ -93,7 +105,7 @@ jobs:
           cat > deploy.sh <<'DEPLOY'
           set -euo pipefail
           TAG="$1"
-          IMAGE_BASE=asia-northeast3-docker.pkg.dev/openrun-452712/openrun-web
+          IMAGE_BASE=asia-northeast3-docker.pkg.dev/openrun-452712/openrun-frontend
 
           docker network inspect openur-network >/dev/null 2>&1 \
             || docker network create openur-network
