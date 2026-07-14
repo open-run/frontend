@@ -132,7 +132,13 @@ TanStack Query for server state; `nuqs` for URL state. App-wide providers in `sr
 
 ## Deploy
 
-Vercel, auto-deploy on push to `main`. Per-app `vercel.json`.
+Push to `main` triggers `.github/workflows/deploy.yml`: it builds the per-app Docker images
+(`Dockerfile`, `ARG APP=web|admin`, standalone output), pushes them to Artifact Registry, and
+SSH-deploys the containers onto the shared GCP Compute Engine VM — `web` and `admin` run as separate
+containers on the internal Docker network alongside the backend, health-gated on `/api/health`.
+Cloudflare fronts the public domains (`open-run.xyz`, `admin.open-run.xyz`) and terminates TLS.
+Build- and run-time config for each app comes from a single base64 `.env` GitHub secret (`WEB_ENV` /
+`ADMIN_ENV`); see `apps/*/.env.production.example` for the keys and format constraints.
 
 ## Active work
 
