@@ -138,7 +138,7 @@ SSH-deploys the containers onto the shared GCP Compute Engine VM — `web` and `
 containers on the internal Docker network alongside the backend, health-gated on `/api/health`.
 Cloudflare fronts the public domains (`open-run.xyz`, `admin.open-run.xyz`) and terminates TLS.
 Build- and run-time config for each app comes from a single base64 `.env` GitHub secret (`WEB_ENV` /
-`ADMIN_ENV`); see `apps/*/.env.production.example` for the keys and format constraints.
+`ADMIN_ENV`); see `apps/*/.env.example` for the keys and format constraints.
 
 ## Active work
 

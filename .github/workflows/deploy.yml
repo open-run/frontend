@@ -86,7 +86,7 @@ jobs:
       # Same per-app secret as the build, decoded straight into the runtime --env-file
       # on the VM (mode 600). It already carries API_SERVER_URL=http://openrun:8080 and
       # the server-only keys. Values must be unquoted/space-free (docker --env-file does
-      # not strip quotes) — enforced by the .env.production.example convention.
+      # not strip quotes) — enforced by the .env.example convention (production section).
       - name: Write runtime env files on VM (via stdin, mode 600)
         env:
           WEB_ENV: ${{ secrets.WEB_ENV }}
