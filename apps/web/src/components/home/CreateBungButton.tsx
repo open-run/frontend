@@ -2,7 +2,6 @@
 
 import { ReactNode } from 'react'
 import { useModal } from '@contexts/ModalProvider'
-import { bungAnalytics } from '@analytics'
 import { PlusIcon } from '@icons/plus'
 import { MODAL_KEY } from '@constants/modal'
 import { colors } from '@styles/colors'
@@ -14,7 +13,6 @@ export default function CreateBungButton({ children }: { children?: ReactNode })
     <button
       className='active:scale-98 mx-auto flex w-full max-w-[500px] items-center justify-center gap-8 rounded-8 border border-dashed border-black py-12 active-press-duration active:bg-gray/50'
       onClick={() => {
-        bungAnalytics.createStarted()
         showModal({ key: MODAL_KEY.CREATE_BUNG, component: <CreateBung /> })
       }}>
       <span className='text-black'>{children}</span>

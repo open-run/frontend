@@ -3,7 +3,6 @@ import ErrorFallback from '@shared/ErrorFallback'
 import PushTransitionLink from '@shared/PushTransitionLink'
 import Skeleton from '@shared/Skeleton'
 import withBoundary from '@shared/withBoundary'
-import { bungAnalytics } from '@analytics'
 import { useBungsQuery } from '@apis/v1/bungs/query'
 import RecommendationCard from './RecommendationCard'
 
@@ -27,19 +26,11 @@ function RecommendationBungs() {
 
   return (
     <section className='flex flex-col gap-8'>
-      {recommendationList?.data.map((bung, index) => (
+      {recommendationList?.data.map((bung) => (
         <PushTransitionLink
           key={bung.bungId}
           className='text-start'
-          href={`/bung/${bung.bungId}`}
-          onClick={() =>
-            bungAnalytics.cardClicked({
-              bungId: bung.bungId,
-              source: 'recommendation',
-              position: index + 1,
-              remainingCount: bung.memberNumber - bung.memberList.length,
-            })
-          }>
+          href={`/bung/${bung.bungId}`}>
           <RecommendationCard
             imageUrl={bung.mainImage as string}
             title={bung.name}

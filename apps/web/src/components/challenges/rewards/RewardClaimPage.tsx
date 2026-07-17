@@ -5,7 +5,6 @@ import { useRouter } from 'next/navigation'
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { useModal } from '@contexts/ModalProvider'
 import { Rarity } from '@type/avatar'
-import { challengeAnalytics } from '@analytics'
 import RarityBadge from '@components/avatar/shared/RarityBadge'
 import PushTransitionLink from '@shared/PushTransitionLink'
 import ToastModal from '@shared/ToastModal'
@@ -39,7 +38,6 @@ export default function RewardClaimPage({ userChallengeId }: RewardClaimPageProp
     promise: ReturnType<typeof startMintJob>
   } | null>(null)
   const attemptCountRef = useRef(0)
-  const hasTrackedOutcomeRef = useRef(false)
 
   useEffect(() => {
     startMintJobRef.current = startMintJob
@@ -59,10 +57,8 @@ export default function RewardClaimPage({ userChallengeId }: RewardClaimPageProp
 
   useEffect(() => {
     attemptCountRef.current = 0
-    hasTrackedOutcomeRef.current = false
     setMintJob(null)
     setIsRewardRevealVisible(false)
-    challengeAnalytics.rewardClaimStarted({ userChallengeId })
 
     let isActive = true
     let settleTimerId: number | null = null
@@ -71,14 +67,6 @@ export default function RewardClaimPage({ userChallengeId }: RewardClaimPageProp
 
     const handleFallback = () => {
       if (!isActive) return
-      if (!hasTrackedOutcomeRef.current) {
-        hasTrackedOutcomeRef.current = true
-        challengeAnalytics.rewardClaimFailed({
-          userChallengeId,
-          attempts: attemptCountRef.current,
-        })
-      }
-
       fallbackToChallenges()
     }
 
@@ -142,15 +130,6 @@ export default function RewardClaimPage({ userChallengeId }: RewardClaimPageProp
 
       setIsRewardRevealVisible(false)
       setMintJob(job)
-      if (!hasTrackedOutcomeRef.current) {
-        hasTrackedOutcomeRef.current = true
-        challengeAnalytics.rewardClaimSucceeded({
-          userChallengeId,
-          nftCategory: job.nftCategory,
-          nftRarity: job.nftRarity,
-          attempts: attemptCountRef.current,
-        })
-      }
     }
 
     const requestMint = async () => {

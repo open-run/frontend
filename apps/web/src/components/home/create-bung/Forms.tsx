@@ -23,7 +23,6 @@ import { ClockIcon } from '@icons/clock'
 import { useAppInsetValue } from '@hooks/useAppInsetSize'
 import { useRefetchQuery } from '@hooks/useRefetchQuery'
 import { useThumbnailImage } from '@hooks/useThumbnailImage'
-import { bungAnalytics } from '@analytics'
 import { useGeocoding } from '@apis/maps/geocoding/mutation'
 import { useCreateBung } from '@apis/v1/bungs/mutation'
 import { myBungsQueries } from '@apis/v1/bungs/my-bungs/query'
@@ -150,19 +149,12 @@ export default function Forms({ nextStep, initialDraft }: { nextStep: () => void
 
       await createBung(requestBody, {
         onSuccess: () => {
-          bungAnalytics.created({
-            distance: requestBody.distance,
-            memberNumber: requestBody.memberNumber,
-            hasAfterRun: requestBody.hasAfterRun,
-            hashtagCount: requestBody.hashtags.length,
-          })
           메인페이지벙리스트업데이트()
           router.push('/')
           nextStep()
         },
       })
     } catch (err) {
-      bungAnalytics.createFailed()
       alert(err)
     }
   }

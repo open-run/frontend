@@ -14,7 +14,6 @@ import {
 import { useModal } from '@contexts/ModalProvider'
 import { useAppStore } from '@store/app'
 import { SmartWalletConnectResponse } from '@type/app'
-import { authAnalytics, resetAnalyticsSession } from '@analytics'
 import { postMessageToRN } from '@shared/AppBridge'
 import LoadingLogo from '@shared/LoadingLogo'
 import { useMessageHandler } from '@hooks/useMessageHandler'
@@ -62,7 +61,6 @@ function SignInApp() {
         break
 
       case MESSAGE.RESPONSE_SMART_WALLET_CONNECT_ERROR:
-        authAnalytics.walletLoginFailed({ surface: 'app', reason: 'bridge_error' })
         setIsLoading(false)
         break
 
@@ -73,7 +71,6 @@ function SignInApp() {
   })
 
   useEffect(() => {
-    resetAnalyticsSession()
     removeCookie(COOKIE.ACCESSTOKEN)
     postMessageToRN({ type: MESSAGE.DISCONNECT_SMART_WALLET })
   }, [])
@@ -83,7 +80,6 @@ function SignInApp() {
       <SmartWalletLoginButton
         isLoading={isLoading}
         onClick={() => {
-          authAnalytics.walletLoginStarted('app')
           setIsLoading(true)
           postMessageToRN({ type: MESSAGE.REQUEST_SMART_WALLET_CONNECT })
         }}
@@ -127,8 +123,6 @@ function SignInBrowser() {
   }, [])
 
   const handleLoginButtonClick = () => {
-    authAnalytics.walletLoginStarted('browser')
-
     if (isConnected && address) {
       setIsLoading(true)
       loginWithAddress(address)
@@ -153,7 +147,6 @@ function SignInBrowser() {
   }
 
   useEffect(() => {
-    resetAnalyticsSession()
     removeCookie(COOKIE.ACCESSTOKEN)
     if (!hasPendingReownSocialRedirect()) {
       void disconnect({ namespace: 'eip155' })

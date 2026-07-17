@@ -13,8 +13,6 @@
       "@icons/openrun": ["../../packages/ui/src/icons/openrun"],
       "@icons/avatar": ["../../packages/ui/src/icons/avatar"],
       "@icons/*": ["./src/components/icons/*"],
-      "@analytics": ["./src/analytics/index"],
-      "@analytics/*": ["./src/analytics/*"],
       "@contexts/*": ["./src/contexts/*"],
       "@hooks/*": ["./src/hooks/*"],
       "@styles/colors": ["../../packages/ui/src/styles/colors"],

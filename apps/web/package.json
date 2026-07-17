@@ -30,7 +30,6 @@
     "next": "16.2.7",
     "nuqs": "^2.6.0",
     "pino-pretty": "^13.0.0",
-    "posthog-js": "^1.393.5",
     "qrcode": "1.5.3",
     "react": "19.2.7",
     "react-cookie": "^7.1.4",

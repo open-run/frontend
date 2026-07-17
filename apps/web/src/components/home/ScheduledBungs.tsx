@@ -3,7 +3,6 @@ import PushTransitionLink from '@shared/PushTransitionLink'
 import Skeleton from '@shared/Skeleton'
 import Spacing from '@shared/Spacing'
 import withBoundary from '@shared/withBoundary'
-import { bungAnalytics } from '@analytics'
 import { useAllMyBungsQuery } from '@apis/v1/bungs/my-bungs/query'
 import BungCard from './BungCard'
 import CreateBungButton from './CreateBungButton'
@@ -37,15 +36,7 @@ function BungList() {
           <li key={`myBungs-${item.bungId}`}>
             <PushTransitionLink
               className='w-full text-start'
-              href={`/bung/${item.bungId}`}
-              onClick={() =>
-                bungAnalytics.cardClicked({
-                  bungId: item.bungId,
-                  source: 'my_bungs',
-                  isOwner: item.hasOwnership,
-                  position: index + 1,
-                })
-              }>
+              href={`/bung/${item.bungId}`}>
               <BungCard
                 imageUrl={item.mainImage as string}
                 imagePriority={index < 3}

@@ -6,7 +6,6 @@ import { useRouter } from 'next/navigation'
 import { useEffect, useRef, useState } from 'react'
 import { useModal } from '@contexts/ModalProvider'
 import { Avatar, SelectedCategory, WearingAvatar } from '@type/avatar'
-import { avatarAnalytics } from '@analytics'
 import AvatarComponent from '@shared/Avatar'
 import ToastModal from '@shared/ToastModal'
 import { ArrowLeftIcon } from '@icons/arrow'
@@ -106,12 +105,10 @@ export default function AvatarPage() {
       void queryClient.invalidateQueries({ queryKey: userQueries.me().queryKey })
       void queryClient.invalidateQueries({ queryKey: bungsQueries.all() })
 
-      avatarAnalytics.saved(selectedAvatar)
       showToast(showModal, 'success', '아바타 저장 완료!')
       router.replace('/')
     } catch (error) {
       console.error(error)
-      avatarAnalytics.saveFailed()
       showToast(showModal, 'error', '아바타 저장에 실패했습니다.')
     } finally {
       setIsSaving(false)

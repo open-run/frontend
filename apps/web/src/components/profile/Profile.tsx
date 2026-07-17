@@ -13,7 +13,6 @@ import GlassSurface from '@shared/GlassSurface'
 import PushTransitionLink from '@shared/PushTransitionLink'
 import Skeleton from '@shared/Skeleton'
 import ToastModal from '@shared/ToastModal'
-import { profileAnalytics } from '@analytics'
 import { bungDetailQueries } from '@apis/v1/bungs/[bungId]/query'
 import { CopyClipboardIcon } from '@icons/clipboard'
 import { CrownIcon } from '@icons/crown'
@@ -317,8 +316,6 @@ function CompletedBung({
   }
 
   const handleFeedbackClick = async () => {
-    profileAnalytics.feedbackClicked({ bungId })
-
     if (currentUserId == null) {
       showFeedbackError('사용자 정보를 불러오지 못했습니다.')
       return
