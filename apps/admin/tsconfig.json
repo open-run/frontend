@@ -1,27 +1,26 @@
 {
   "compilerOptions": {
-    "baseUrl": ".",
     "paths": {
       "@/*": [
-        "src/*"
+        "./src/*"
       ],
       "@components/*": [
-        "src/components/*"
+        "./src/components/*"
       ],
       "@contexts/*": [
-        "src/contexts/*"
+        "./src/contexts/*"
       ],
       "@apis/*": [
-        "src/apis/*"
+        "./src/apis/*"
       ],
       "@constants/cookie": [
         "../../packages/api-client/src/cookie"
       ],
       "@constants/*": [
-        "src/constants/*"
+        "./src/constants/*"
       ],
       "@icons/*": [
-        "src/components/icons/*"
+        "./src/components/icons/*"
       ],
       "@shared/Modal": [
         "../../packages/ui/src/Modal"
@@ -30,13 +29,13 @@
         "../../packages/ui/src/LoadingLogo"
       ],
       "@shared/*": [
-        "src/components/shared/*"
+        "./src/components/shared/*"
       ],
       "@styles/colors": [
         "../../packages/ui/src/styles/colors"
       ],
       "@styles/*": [
-        "src/styles/*"
+        "./src/styles/*"
       ],
       "@utils/cookie": [
         "../../packages/api-client/src/cookie"
@@ -45,7 +44,7 @@
         "../../packages/api-client/src/reownSocialRedirect"
       ],
       "@utils/*": [
-        "src/utils/*"
+        "./src/utils/*"
       ],
       "@type/*": [
         "../../packages/types/src/*"
@@ -76,8 +75,8 @@
   },
   "include": [
     "next-env.d.ts",
-    "src/**/*.ts",
-    "src/**/*.tsx",
+    "./src/**/*.ts",
+    "./src/**/*.tsx",
     ".next/types/**/*.ts",
     ".next/dev/types/**/*.ts"
   ],
