@@ -37,7 +37,8 @@ export default function AdminAvatarTryOnPanel() {
         sizes={AVATAR_IMAGE_SIZES}
       />
       <div className='flex min-h-[640px] flex-col'>
-        <aside className='border-b border-black/[0.06] p-16'>
+        {/* 아바타는 미리보기 보드 아래로 삐져나오는 디자인이라(신발 등), 카테고리와 겹치지 않게 하단 여백을 넉넉히 둔다 */}
+        <aside className='border-b border-black/[0.06] px-16 pb-44 pt-16'>
           <AvatarPreviewBoard wearingAvatar={wearingAvatar} onReset={() => setWearingAvatar(EMPTY_WEARING_AVATAR)} />
         </aside>
 

@@ -107,9 +107,9 @@ export default function GrantNftDrawer({ open, user, ownedTokenIds, onClose, onG
               </button>
             </header>
 
-            <div className='border-b border-black/[0.06] p-12'>
+            <div className='p-12'>
               <input
-                className='glass-inset h-40 w-full rounded-full px-14 text-14 text-[#1d1d1f] outline-none placeholder:text-[#6e6e73] focus:ring-2 focus:ring-[#4A5CEF]'
+                className='h-40 w-full rounded-full bg-black/[0.05] px-14 text-14 text-[#1d1d1f] outline-none placeholder:text-[#6e6e73] focus:bg-black/[0.03] focus:ring-2 focus:ring-[#4A5CEF]'
                 placeholder='NFT 이름 또는 카테고리 검색'
                 value={keyword}
                 onChange={(event) => setKeyword(event.target.value)}
@@ -175,10 +175,10 @@ function GrantNftCard({
       aria-pressed={selected}
       className={clsx(
         'relative flex w-full flex-col gap-4 rounded-8 p-6 text-left transition active-press-duration',
-        selected ? 'bg-[#4A5CEF]/10 ring-2 ring-[#4A5CEF]' : 'glass-inset hover:bg-white active:scale-[0.98]',
+        selected ? 'bg-[#4A5CEF]/10 ring-2 ring-[#4A5CEF]' : 'hover:bg-black/[0.04] active:scale-[0.98]',
       )}
       onClick={onSelect}>
-      <div className='relative aspect-square w-full rounded-8 bg-white/60'>
+      <div className='relative aspect-square w-full rounded-8 bg-black/[0.04]'>
         {item.thumbnailUrl ? (
           <Image
             alt={item.name}
@@ -216,7 +216,7 @@ function GrantNftListSkeleton() {
   return (
     <div className='grid grid-cols-4 gap-6'>
       {Array.from({ length: 16 }).map((_, index) => (
-        <div key={index} className='glass-inset flex flex-col gap-4 rounded-8 p-6'>
+        <div key={index} className='flex flex-col gap-4 rounded-8 p-6'>
           <div className='aspect-square w-full animate-pulse rounded-8 bg-black/[0.07]' />
           <div className='h-12 w-3/5 animate-pulse rounded-4 bg-black/[0.07]' />
           <div className='h-10 w-2/5 animate-pulse rounded-4 bg-black/[0.07]' />
