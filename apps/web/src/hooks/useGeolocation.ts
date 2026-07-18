@@ -1,6 +1,4 @@
 import { queryOptions, useQuery } from '@tanstack/react-query'
-import { useEffect, useRef } from 'react'
-import { useAppStore } from '@store/app'
 import { usePermissionStore } from '@store/permission'
 import { Geolocation } from '@type/geolocation'
 import { BridgeMessage, postMessageToRN } from '@shared/AppBridge'
@@ -15,9 +13,11 @@ const GEOLOCATION_RETRY_DELAY = 1000
 // 앱 환경에서 위치 정보를 가져오는 함수
 const getAppLocation = (): Promise<Geolocation> => {
   return new Promise((resolve, reject) => {
-    const timeoutId = setTimeout(() => {
-      reject(new Error('위치 정보 요청 시간 초과'))
-    }, 20000) // 10초 타임아웃
+    // 브릿지가 없으면 postMessageToRN이 조용히 no-op이라 응답이 영원히 오지 않는다 — 즉시 실패시킨다
+    if (typeof window === 'undefined' || !window.ReactNativeWebView) {
+      reject(new Error('앱 브릿지를 사용할 수 없습니다'))
+      return
+    }
 
     const onMessageHandler = (event: MessageEvent) => {
       try {
@@ -40,6 +40,13 @@ const getAppLocation = (): Promise<Geolocation> => {
         console.error('메시지 파싱 오류:', error)
       }
     }
+
+    const timeoutId = setTimeout(() => {
+      // 타임아웃 시에도 리스너를 정리해 재시도마다 리스너가 누적되지 않게 한다
+      window.removeEventListener('message', onMessageHandler as EventListener)
+      document.removeEventListener('message', onMessageHandler as EventListener)
+      reject(new Error('위치 정보 요청 시간 초과'))
+    }, 20000) // 20초 타임아웃
 
     // iOS와 Android 모두 지원하기 위해 window와 document에 이벤트 리스너 추가
     window.addEventListener('message', onMessageHandler as EventListener)
@@ -102,23 +109,26 @@ const getBrowserLocation = (): Promise<Geolocation> => {
 }
 
 export default function useGeolocation() {
-  const { isApp } = useAppStore()
   const { setIsGeolocationPermissionGranted } = usePermissionStore()
-  const messageHandlerRef = useRef<((event: MessageEvent) => void) | null>(null)
+
+  // 경로 판단은 isApp(신원)이 아니라 실제 전송 수단인 window.ReactNativeWebView 존재 여부로 한다 —
+  // 브릿지가 없는 환경(일반 브라우저, 카카오톡 등 서드파티 인앱 브라우저)은 브라우저 경로를 탄다.
+  const hasAppBridge = typeof window !== 'undefined' && !!window.ReactNativeWebView
 
   // React Query를 사용한 위치 정보 캐싱
   const geolocationQueryOptions = queryOptions({
-    queryKey: ['geolocation'],
+    // 환경을 키에 포함해, 판별이 뒤늦게 바뀌어도 올바른 경로로 재요청되게 한다
+    queryKey: ['geolocation', hasAppBridge],
     queryFn: async (): Promise<Geolocation> => {
       try {
-        const result = isApp ? await getAppLocation() : await getBrowserLocation()
+        const result = hasAppBridge ? await getAppLocation() : await getBrowserLocation()
         setIsGeolocationPermissionGranted(true)
         return result
       } catch (err) {
         setIsGeolocationPermissionGranted(false)
 
         // 개발 환경에서 특정 에러 처리
-        if (process.env.NODE_ENV === 'development' && !isApp) {
+        if (process.env.NODE_ENV === 'development' && !hasAppBridge) {
           const errorMessage = err instanceof Error ? err.message : String(err)
           if (errorMessage.includes('POSITION_UNAVAILABLE') || errorMessage.includes('[위치 정보 사용 불가]')) {
             console.warn('개발 환경에서는 에러 발생 시 임시 위치 정보 권한 허용')
@@ -147,19 +157,6 @@ export default function useGeolocation() {
     error,
     refetch,
   } = useQuery(geolocationQueryOptions)
-
-  // 앱 환경에서 메시지 핸들러 정리
-  useEffect(() => {
-    if (!isApp || !messageHandlerRef.current) return
-
-    return () => {
-      if (messageHandlerRef.current) {
-        window.removeEventListener('message', messageHandlerRef.current as EventListener)
-        document.removeEventListener('message', messageHandlerRef.current as EventListener)
-        messageHandlerRef.current = null
-      }
-    }
-  }, [isApp])
 
   return {
     location: location || null,
