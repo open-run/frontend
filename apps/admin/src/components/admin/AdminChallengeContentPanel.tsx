@@ -5,6 +5,7 @@ import { useEffect, useMemo, useState } from 'react'
 import { useQueryClient } from '@tanstack/react-query'
 import {
   AdminChallenge,
+  AdminChallengeCompletion,
   AdminChallengeRequest,
   AdminChallengeStage,
   AdminChallengeType,
@@ -16,9 +17,8 @@ import {
   useDeleteAdminChallengeMutation,
   useUpdateAdminChallengeMutation,
 } from '@apis/v1/admin/mutation'
-import { adminQueries, useAdminChallengesQuery } from '@apis/v1/admin/query'
+import { adminQueries, useAdminChallengeCompletionsQuery, useAdminChallengesQuery } from '@apis/v1/admin/query'
 import { getApiErrorMessage } from '@openrun/api-client/error'
-import { LoadingLogo } from '@openrun/ui'
 
 type SelectedChallengeId = number | 'new' | null
 
@@ -171,11 +171,7 @@ export default function AdminChallengeContentPanel() {
   }
 
   if (challengesQuery.isLoading) {
-    return (
-      <section className='glass-panel flex h-420 items-center justify-center rounded-16'>
-        <LoadingLogo />
-      </section>
-    )
+    return <ChallengeContentSkeleton />
   }
 
   if (challengesQuery.error) {
@@ -208,21 +204,25 @@ export default function AdminChallengeContentPanel() {
           새 도전과제
         </button>
 
-        <div className='scrollbar-web-hidden flex max-h-[620px] flex-col gap-8 overflow-y-auto'>
-          {challenges.length === 0 ? (
-            <div className='rounded-10 bg-black/[0.03] p-16 text-12 font-medium text-[#86868b]'>
-              등록된 도전과제가 없습니다.
-            </div>
-          ) : (
-            challenges.map((challenge) => (
-              <ChallengeListItem
-                key={challenge.challengeId}
-                challenge={challenge}
-                selected={challenge.challengeId === selectedChallengeId}
-                onSelect={() => setSelectedChallengeId(challenge.challengeId)}
-              />
-            ))
-          )}
+        {/* lg: 리스트를 absolute로 띄워 왼쪽 컬럼이 행 높이 산정에 기여하지 않게 한다 —
+            행 높이는 오른쪽 상세가 정하고, 리스트는 남은 높이를 채우며 내부 스크롤된다 */}
+        <div className='relative lg:min-h-[240px] lg:flex-1'>
+          <div className='scrollbar-web-hidden -mr-12 flex max-h-[620px] flex-col gap-8 overflow-y-auto pr-12 lg:absolute lg:inset-0 lg:max-h-none'>
+            {challenges.length === 0 ? (
+              <div className='rounded-10 bg-black/[0.03] p-16 text-12 font-medium text-[#86868b]'>
+                등록된 도전과제가 없습니다.
+              </div>
+            ) : (
+              challenges.map((challenge) => (
+                <ChallengeListItem
+                  key={challenge.challengeId}
+                  challenge={challenge}
+                  selected={challenge.challengeId === selectedChallengeId}
+                  onSelect={() => setSelectedChallengeId(challenge.challengeId)}
+                />
+              ))
+            )}
+          </div>
         </div>
       </aside>
 
@@ -253,7 +253,8 @@ function ChallengeListItem({
   selected: boolean
   onSelect: () => void
 }) {
-  const isRepetitive = challenge.challengeType === 'repetitive'
+  const typeLabel =
+    CHALLENGE_TYPE_OPTIONS.find((option) => option.value === challenge.challengeType)?.label ?? challenge.challengeType
 
   return (
     <button
@@ -268,8 +269,8 @@ function ChallengeListItem({
         <p className={clsx('truncate text-14 font-semibold', selected ? 'text-white' : 'text-[#1d1d1f]')}>
           {challenge.name}
         </p>
-        <StatusPill tone={selected ? 'inverted' : isRepetitive ? 'accent' : 'neutral'}>
-          {isRepetitive ? '반복' : '일반'}
+        <StatusPill tone={selected ? 'inverted' : CHALLENGE_TYPE_PILL_TONE[challenge.challengeType]}>
+          {typeLabel}
         </StatusPill>
       </div>
       <p className={clsx('line-clamp-2 text-12 leading-relaxed', selected ? 'text-white/75' : 'text-[#86868b]')}>
@@ -415,6 +416,8 @@ function ChallengeForm({
           {isSaving ? '저장 중' : isNew ? '생성' : '저장'}
         </button>
       </div>
+
+      {!isNew && selectedChallenge && <ChallengeCompletionsSection challengeId={selectedChallenge.challengeId} />}
     </form>
   )
 }
@@ -568,12 +571,73 @@ function SelectField<OptionValue extends string>({
   )
 }
 
-type StatusPillTone = 'neutral' | 'accent' | 'inverted'
+function formatCompletedDate(value: AdminChallengeCompletion['completedDate']) {
+  if (!value) return '-'
+  const date = Array.isArray(value)
+    ? new Date(value[0], (value[1] ?? 1) - 1, value[2] ?? 1, value[3] ?? 0, value[4] ?? 0)
+    : new Date(value)
+  if (Number.isNaN(date.getTime())) return '-'
+  const pad = (n: number) => String(n).padStart(2, '0')
+  return `${date.getFullYear()}.${pad(date.getMonth() + 1)}.${pad(date.getDate())} ${pad(date.getHours())}:${pad(date.getMinutes())}`
+}
+
+function ChallengeCompletionsSection({ challengeId }: { challengeId: number }) {
+  const { data, isLoading, isError } = useAdminChallengeCompletionsQuery(challengeId)
+  const completions = data?.data ?? []
+
+  return (
+    <section className='flex flex-col gap-10 border-t border-black/[0.06] pt-16'>
+      <div className='flex items-center justify-between'>
+        <h4 className='text-14 font-semibold text-[#1d1d1f]'>완료한 유저</h4>
+        {!isLoading && !isError && <StatusPill>{`${completions.length}명`}</StatusPill>}
+      </div>
+      {isLoading ? (
+        <p className='text-12 text-[#86868b]'>불러오는 중…</p>
+      ) : isError ? (
+        <p className='text-12 font-medium text-pink'>완료 유저 목록을 불러오지 못했습니다.</p>
+      ) : completions.length === 0 ? (
+        <p className='text-12 text-[#86868b]'>아직 완료한 유저가 없습니다.</p>
+      ) : (
+        <ul className='flex flex-col gap-6'>
+          {completions.map((completion) => (
+            <li
+              key={completion.userChallengeId}
+              className='flex items-center justify-between gap-10 rounded-10 bg-black/[0.03] px-12 py-8'>
+              <div className='min-w-0'>
+                <p className='truncate text-12 font-semibold text-[#1d1d1f]'>
+                  {completion.nickname || completion.userId}
+                </p>
+                <p className='text-12 text-[#86868b]'>
+                  {completion.stageNumber}단계 · {completion.conditionCount}회 달성 ·{' '}
+                  {formatCompletedDate(completion.completedDate)}
+                </p>
+              </div>
+              <StatusPill tone={completion.nftCompleted ? 'accent' : 'neutral'}>
+                {completion.nftCompleted ? 'NFT 수령' : 'NFT 미수령'}
+              </StatusPill>
+            </li>
+          ))}
+        </ul>
+      )}
+    </section>
+  )
+}
+
+type StatusPillTone = 'neutral' | 'accent' | 'inverted' | 'green' | 'amber'
+
+const CHALLENGE_TYPE_PILL_TONE: Record<AdminChallengeType, StatusPillTone> = {
+  normal: 'neutral',
+  tuto: 'green',
+  hidden: 'amber',
+  repetitive: 'accent',
+}
 
 const STATUS_PILL_TONE_CLASS: Record<StatusPillTone, string> = {
   neutral: 'bg-black/[0.05] text-[#6e6e73]',
   accent: 'bg-[#4A5CEF]/10 text-[#4A5CEF]',
   inverted: 'bg-white/25 text-white',
+  green: 'bg-[#2E9E5B]/10 text-[#237A46]',
+  amber: 'bg-[#C77700]/10 text-[#A36200]',
 }
 
 function StatusPill({ children, tone = 'neutral' }: { children: string | number; tone?: StatusPillTone }) {
@@ -689,4 +753,45 @@ function getErrorMessage(error: Error | null): string | null {
   if (!error) return null
 
   return getApiErrorMessage(error) ?? error.message
+}
+
+function ChallengeContentSkeleton() {
+  return (
+    <section className='grid gap-16 lg:grid-cols-[340px_1fr]'>
+      <aside className='glass-panel flex flex-col gap-12 rounded-16 p-16'>
+        <div className='flex items-center justify-between gap-12'>
+          <span className='h-16 w-80 animate-pulse rounded-4 bg-black/[0.07]' />
+          <span className='h-12 w-20 animate-pulse rounded-4 bg-black/[0.07]' />
+        </div>
+        <div className='h-40 animate-pulse rounded-10 bg-black/[0.05]' />
+        <div className='flex flex-col gap-8'>
+          {Array.from({ length: 5 }).map((_, index) => (
+            <div key={index} className='flex flex-col gap-8 rounded-10 bg-black/[0.03] p-14'>
+              <div className='flex items-center justify-between gap-8'>
+                <span className='h-14 w-3/5 animate-pulse rounded-4 bg-black/[0.07]' />
+                <span className='h-14 w-32 animate-pulse rounded-full bg-black/[0.07]' />
+              </div>
+              <span className='h-11 w-full animate-pulse rounded-4 bg-black/[0.06]' />
+              <span className='h-11 w-4/5 animate-pulse rounded-4 bg-black/[0.06]' />
+            </div>
+          ))}
+        </div>
+      </aside>
+
+      <section className='glass-panel flex flex-col gap-14 rounded-16 p-16'>
+        <span className='h-16 w-120 animate-pulse rounded-4 bg-black/[0.07]' />
+        {Array.from({ length: 3 }).map((_, index) => (
+          <div key={index} className='flex flex-col gap-6'>
+            <span className='h-12 w-60 animate-pulse rounded-4 bg-black/[0.06]' />
+            <span className='h-40 w-full animate-pulse rounded-10 bg-black/[0.05]' />
+          </div>
+        ))}
+        <div className='flex flex-col gap-6'>
+          <span className='h-12 w-60 animate-pulse rounded-4 bg-black/[0.06]' />
+          <span className='h-96 w-full animate-pulse rounded-10 bg-black/[0.05]' />
+        </div>
+        <span className='mt-auto h-44 w-full animate-pulse rounded-full bg-black/[0.05]' />
+      </section>
+    </section>
+  )
 }
