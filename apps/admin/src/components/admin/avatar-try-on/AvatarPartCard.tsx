@@ -30,7 +30,7 @@ export default function AvatarPartCard({ avatar, selected, onToggle, onHoverStar
         !wearable
           ? 'cursor-not-allowed bg-white/25 opacity-60'
           : selected
-            ? 'bg-[#4f8dff]/15 ring-2 ring-[#4f8dff]'
+            ? 'bg-[#4A5CEF]/10 ring-2 ring-[#4A5CEF]'
             : 'glass-inset hover:bg-white/85 active:scale-[0.98]',
       )}
       onClick={() => {

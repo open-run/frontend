@@ -1,5 +1,5 @@
-import AdminPage from '@components/admin/AdminPage'
+import { redirect } from 'next/navigation'
 
 export default function Page() {
-  return <AdminPage />
+  redirect('/avatar')
 }

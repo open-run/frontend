@@ -3,6 +3,7 @@ import { Jost } from 'next/font/google'
 import { ModalProvider } from '@contexts/ModalProvider'
 import ReactQueryProvider from '@contexts/ReactQueryProvider'
 import { WalletProvider } from '@contexts/WalletProvider'
+import OverlayScrollbarManager from '@components/shared/OverlayScrollbarManager'
 import { ROOT_PORTAL_ID } from '@constants/layout'
 import '@/styles/globals.css'
 
@@ -25,6 +26,7 @@ export default function AdminRootLayout({ children }: { children: React.ReactNod
             <ModalProvider>{children}</ModalProvider>
           </WalletProvider>
         </ReactQueryProvider>
+        <OverlayScrollbarManager />
         <div id={ROOT_PORTAL_ID} />
       </body>
     </html>

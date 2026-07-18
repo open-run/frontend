@@ -37,7 +37,7 @@ export default function AdminAvatarTryOnPanel() {
         sizes={AVATAR_IMAGE_SIZES}
       />
       <div className='flex min-h-[640px] flex-col'>
-        <aside className='border-b border-white/60 p-16'>
+        <aside className='border-b border-black/[0.06] p-16'>
           <AvatarPreviewBoard wearingAvatar={wearingAvatar} onReset={() => setWearingAvatar(EMPTY_WEARING_AVATAR)} />
         </aside>
 
@@ -48,7 +48,7 @@ export default function AdminAvatarTryOnPanel() {
 
           <div className='flex items-center justify-between px-16 pt-16'>
             <h3 className='text-16 font-bold text-black'>파츠 목록</h3>
-            <span className='font-jost text-13 font-bold text-[#6e6e73]'>
+            <span className='font-jost text-12 font-bold text-[#6e6e73]'>
               {filteredAvatarItems.length} / {avatarItems.length}
             </span>
           </div>
@@ -56,7 +56,7 @@ export default function AdminAvatarTryOnPanel() {
           {avatarItemsQuery.isLoading ? (
             <AvatarPartsGridSkeleton />
           ) : avatarItemsQuery.error ? (
-            <div className='mx-16 mt-16 rounded-16 border border-pink/30 bg-pink/10 p-16 text-14 font-bold text-pink'>
+            <div className='mx-16 mt-16 rounded-12 border border-pink/25 bg-pink/[0.08] p-16 text-14 font-medium text-pink'>
               아바타 파츠를 불러오지 못했습니다.
             </div>
           ) : (

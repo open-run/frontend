@@ -964,7 +964,7 @@ function WalletConnectContent({
           <p className='text-16 font-semibold text-black-darken'>
             {wcError ? '연결을 완료하지 못했어요' : '휴대폰 지갑으로 QR을 스캔해 주세요'}
           </p>
-          <p className='max-w-[280px] text-13 font-medium leading-[1.45] text-gray-darker'>
+          <p className='max-w-[280px] text-12 font-medium leading-[1.45] text-gray-darker'>
             {wcError ? '이전 요청이 만료되었거나 취소되었어요.' : 'WalletConnect 지원 지갑에서 연결 요청을 승인하면 로그인돼요.'}
           </p>
         </div>
@@ -973,14 +973,14 @@ function WalletConnectContent({
       <div className='flex w-full flex-col gap-8'>
         {wcError ? (
           <button
-            className='flex h-48 w-full items-center justify-center rounded-16 bg-primary text-15 font-semibold text-white active-press-duration active:bg-primary-darken'
+            className='flex h-48 w-full items-center justify-center rounded-16 bg-primary text-14 font-semibold text-white active-press-duration active:bg-primary-darken'
             onClick={onRetry}>
             다시 시도
           </button>
         ) : (
           <button
             className={clsx(
-              'flex h-48 w-full items-center justify-center gap-8 rounded-16 bg-[#F2F3F5] text-15 font-semibold text-black-darken active-press-duration active:bg-gray/80',
+              'flex h-48 w-full items-center justify-center gap-8 rounded-16 bg-[#F2F3F5] text-14 font-semibold text-black-darken active-press-duration active:bg-gray/80',
               !isReady && 'cursor-not-allowed opacity-50',
             )}
             disabled={!isReady}
@@ -1018,15 +1018,15 @@ function ExternalWalletContent({
         </div>
 
         <div className='flex flex-col items-center gap-6'>
-          <p className='text-17 font-semibold text-black-darken'>{walletName} 연결 대기 중</p>
-          <p className='max-w-[280px] text-13 font-medium leading-[1.45] text-gray-darker'>
+          <p className='text-16 font-semibold text-black-darken'>{walletName} 연결 대기 중</p>
+          <p className='max-w-[280px] text-12 font-medium leading-[1.45] text-gray-darker'>
             지갑 앱이나 브라우저 확장 프로그램에서 연결 요청을 승인해 주세요.
           </p>
         </div>
       </div>
 
       <button
-        className='flex h-48 w-full items-center justify-center rounded-16 bg-[#F2F3F5] text-15 font-semibold text-black-darken active-press-duration active:bg-gray/80'
+        className='flex h-48 w-full items-center justify-center rounded-16 bg-[#F2F3F5] text-14 font-semibold text-black-darken active-press-duration active:bg-gray/80'
         onClick={onRetry}>
         연결 요청 다시 보내기
       </button>
@@ -1070,14 +1070,14 @@ function SocialWalletContent({
         </div>
 
         <div className='flex flex-col items-center gap-6'>
-          <p className='text-17 font-semibold text-black-darken'>{title}</p>
-          <p className='max-w-[300px] text-13 font-medium leading-[1.45] text-gray-darker'>{description}</p>
+          <p className='text-16 font-semibold text-black-darken'>{title}</p>
+          <p className='max-w-[300px] text-12 font-medium leading-[1.45] text-gray-darker'>{description}</p>
         </div>
       </div>
 
       {hasError && (
         <button
-          className='flex h-48 w-full items-center justify-center rounded-16 bg-[#F2F3F5] text-15 font-semibold text-black-darken active-press-duration active:bg-gray/80'
+          className='flex h-48 w-full items-center justify-center rounded-16 bg-[#F2F3F5] text-14 font-semibold text-black-darken active-press-duration active:bg-gray/80'
           onClick={onRetry}>
           다시 시도
         </button>

@@ -161,22 +161,22 @@ export default function AdminSignInPage() {
   }, [isAppKitModalOpen, isConnected, isLoading, status, stopWalletConnect])
 
   return (
-    <main className='flex min-h-dvh flex-col items-center justify-center bg-gray-lighten px-16'>
-      <section className='flex w-full max-w-[420px] flex-col gap-20 rounded-12 bg-white p-32 shadow-floating-primary'>
+    <main className='admin-bg flex min-h-dvh flex-col items-center justify-center px-16'>
+      <section className='glass-panel flex w-full max-w-[420px] flex-col gap-20 rounded-24 p-32'>
         <header className='flex flex-col gap-6'>
-          <h1 className='text-24 font-bold text-black'>OpenRun Admin</h1>
-          <p className='text-14 text-gray-darkest'>관리자 권한 지갑으로 로그인하세요.</p>
+          <h1 className='text-24 font-bold text-[#1d1d1f]'>OpenRun Admin</h1>
+          <p className='text-14 text-[#6e6e73]'>관리자 권한 지갑으로 로그인하세요.</p>
         </header>
 
         <button
           type='button'
-          className='flex h-48 w-full items-center justify-center rounded-8 bg-primary text-15 font-bold text-white active:bg-primary-darken disabled:bg-gray disabled:text-gray-lighten'
+          className='cta-gradient flex h-48 w-full items-center justify-center rounded-full text-14 font-bold text-white active:scale-[0.99] disabled:bg-gray disabled:bg-none disabled:text-gray-lighten disabled:shadow-none'
           disabled={isLoading}
           onClick={handleLoginButtonClick}>
           {isLoading ? <LoadingLogo className='w-120' /> : '지갑 연결하고 로그인'}
         </button>
 
-        <p className='text-12 text-gray-darkest'>
+        <p className='text-12 text-[#6e6e73]'>
           관리자 화이트리스트에 등록된 지갑만 접근 가능합니다. 일반 사용자 페이지는{' '}
           <a className='text-primary underline' href='https://www.open-run.xyz'>
             www.open-run.xyz
