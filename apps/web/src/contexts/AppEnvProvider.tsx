@@ -2,14 +2,6 @@
 
 import { ReactNode, createContext, useContext } from 'react'
 
-/** 앱 웹뷰가 UA 끝에 붙이는 식별 토큰 (app/app/index.tsx의 applicationNameForUserAgent) */
-export const APP_UA_TOKEN = 'OpenRunApp'
-
-/** 앱 여부 판별의 유일한 지점 — 서버(layout)와 클라이언트 모두 이 함수만 사용한다 */
-export function isAppUserAgent(userAgent: string | null | undefined) {
-  return userAgent?.includes(APP_UA_TOKEN) ?? false
-}
-
 type AppEnv = {
   isApp: boolean
 }
