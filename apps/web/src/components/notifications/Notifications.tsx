@@ -2,8 +2,6 @@
 
 import Image from 'next/image'
 import { useRouter } from 'next/navigation'
-import { useRef } from 'react'
-import OverlayScrollbar from '@shared/OverlayScrollbar'
 import { ArrowLeftIcon } from '@icons/arrow'
 import useAppInsetSize from '@hooks/useAppInsetSize'
 import { colors } from '@styles/colors'
@@ -11,7 +9,6 @@ import { colors } from '@styles/colors'
 export default function Notifications() {
   const router = useRouter()
   const topPadding = useAppInsetSize('top', 0)
-  const listScrollRef = useRef<HTMLDivElement>(null)
 
   return (
     <section className='flex h-full w-full flex-col bg-white' style={{ paddingTop: topPadding }}>
@@ -24,17 +21,14 @@ export default function Notifications() {
         <h1 className='text-16 font-bold'>알림</h1>
       </header>
 
-      <div className='relative min-h-0 flex-1'>
-        <div ref={listScrollRef} className='scrollbar-web-hidden h-full overflow-y-auto px-16 pb-120'>
-          <div className='flex h-full w-full flex-col items-center justify-center gap-8'>
-            <Image src='/images/home/skewed_x_button.png' alt='기울어진 X 버튼 이미지' width={56} height={56} />
-            <p className='text-center text-14 leading-20 text-gray-darken'>
-              아직 알림이 없어요 <br />
-              새로운 알림이 오면 여기서 확인할 수 있어요!
-            </p>
-          </div>
+      <div className='scrollbar-web-hidden min-h-0 flex-1 overflow-y-auto px-16 pb-120'>
+        <div className='flex h-full w-full flex-col items-center justify-center gap-8'>
+          <Image src='/images/home/skewed_x_button.png' alt='기울어진 X 버튼 이미지' width={56} height={56} />
+          <p className='text-center text-14 leading-20 text-gray-darken'>
+            아직 알림이 없어요 <br />
+            새로운 알림이 오면 여기서 확인할 수 있어요!
+          </p>
         </div>
-        <OverlayScrollbar scrollRef={listScrollRef} />
       </div>
     </section>
   )

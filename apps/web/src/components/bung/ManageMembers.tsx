@@ -2,11 +2,9 @@
 
 import Image from 'next/image'
 import { useRouter } from 'next/navigation'
-import { useRef } from 'react'
 import { useModal } from '@contexts/ModalProvider'
 import ErrorFallback from '@shared/ErrorFallback'
 import Input from '@shared/Input'
-import OverlayScrollbar from '@shared/OverlayScrollbar'
 import Skeleton from '@shared/Skeleton'
 import { ArrowLeftIcon } from '@icons/arrow'
 import { MagnifierIcon } from '@icons/magnifier'
@@ -24,7 +22,6 @@ export default function ManageMembers({ bungId }: { bungId: string }) {
   const { memberList, isError, isPending } = useBungMemberList(bungId)
   const { search, setSearch, filteredList } = useFuseSearch(memberList, 'nickname')
   const topPadding = useAppInsetSize('top', 0)
-  const memberListRef = useRef<HTMLUListElement>(null)
 
   return (
     <section className='h-full w-full bg-gray-lighten' style={{ paddingTop: topPadding }}>
@@ -59,40 +56,37 @@ export default function ManageMembers({ bungId }: { bungId: string }) {
             <ErrorFallback type='medium' />
           </div>
         ) : (
-          <div className='relative h-[calc(100%-230px)]'>
-            <ul ref={memberListRef} className='scrollbar-web-hidden flex h-full flex-col gap-16 overflow-y-auto pb-40'>
-              {filteredList.map((member) => (
-                <li key={member.userId} className='flex items-center justify-between gap-8'>
-                  <div className='flex items-center gap-16'>
-                    <Image
-                      className='rounded-8 bg-black-darken object-contain'
-                      src={member.profileImageUrl || DEFAULT_PROFILE_IMAGE_URL}
-                      alt={`${member.nickname}의 아바타`}
-                      width={76}
-                      height={76}
-                    />
-                    <div className='flex items-center gap-4'>
-                      <span className='text-14 font-bold text-black-darken'>{member.nickname}</span>
-                      {member.owner && <Image src='/images/icon_crown.png' alt='Crown Icon' width={16} height={16} />}
-                    </div>
+          <ul className='scrollbar-web-hidden flex h-[calc(100%-230px)] flex-col gap-16 overflow-y-auto pb-40'>
+            {filteredList.map((member) => (
+              <li key={member.userId} className='flex items-center justify-between gap-8'>
+                <div className='flex items-center gap-16'>
+                  <Image
+                    className='rounded-8 bg-black-darken object-contain'
+                    src={member.profileImageUrl || DEFAULT_PROFILE_IMAGE_URL}
+                    alt={`${member.nickname}의 아바타`}
+                    width={76}
+                    height={76}
+                  />
+                  <div className='flex items-center gap-4'>
+                    <span className='text-14 font-bold text-black-darken'>{member.nickname}</span>
+                    {member.owner && <Image src='/images/icon_crown.png' alt='Crown Icon' width={16} height={16} />}
                   </div>
-                  {member.owner === false && (
-                    <button
-                      className='active:scale-98 rounded-12 bg-pink px-13 py-4 text-12 text-white active-press-duration active:bg-pink/80'
-                      onClick={() => {
-                        showModal({
-                          key: MODAL_KEY.CONFIRM_DROPOUT,
-                          component: <ConfirmDropoutModal member={member} />,
-                        })
-                      }}>
-                      내보내기
-                    </button>
-                  )}
-                </li>
-              ))}
-            </ul>
-            <OverlayScrollbar scrollRef={memberListRef} />
-          </div>
+                </div>
+                {member.owner === false && (
+                  <button
+                    className='active:scale-98 rounded-12 bg-pink px-13 py-4 text-12 text-white active-press-duration active:bg-pink/80'
+                    onClick={() => {
+                      showModal({
+                        key: MODAL_KEY.CONFIRM_DROPOUT,
+                        component: <ConfirmDropoutModal member={member} />,
+                      })
+                    }}>
+                    내보내기
+                  </button>
+                )}
+              </li>
+            ))}
+          </ul>
         )}
       </section>
     </section>

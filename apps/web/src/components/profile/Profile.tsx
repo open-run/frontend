@@ -2,7 +2,7 @@
 
 import clsx from 'clsx'
 import Image from 'next/image'
-import { useRef, useState } from 'react'
+import { useState } from 'react'
 import 'swiper/css'
 import { Autoplay } from 'swiper/modules'
 import { Swiper, SwiperSlide } from 'swiper/react'
@@ -10,7 +10,6 @@ import { useQueryClient } from '@tanstack/react-query'
 import { useModal } from '@contexts/ModalProvider'
 import AddressClipboard from '@shared/AddressClipboard'
 import GlassSurface from '@shared/GlassSurface'
-import OverlayScrollbar from '@shared/OverlayScrollbar'
 import PushTransitionLink from '@shared/PushTransitionLink'
 import Skeleton from '@shared/Skeleton'
 import ToastModal from '@shared/ToastModal'
@@ -51,7 +50,6 @@ export default function Profile() {
   const completedBungList = completedBungs?.data ?? []
   const topPadding = useAppInsetSize('top', 24)
   const scrollBottomPadding = useAppInsetSize('bottom', 104)
-  const listScrollRef = useRef<HTMLDivElement>(null)
 
   return (
     <section className='h-full w-full bg-gray-lighten'>
@@ -115,51 +113,47 @@ export default function Profile() {
           />
         </div>
 
-        <div className='relative min-h-0 w-full flex-1'>
-          <div
-            ref={listScrollRef}
-            className='scrollbar-web-hidden flex h-full w-full flex-col gap-8 overflow-y-auto'
-            style={{ paddingBottom: scrollBottomPadding }}>
-            {recentAcquiredNfts.length > 0 && (
-              <div className='mb-16 h-76 w-full shrink-0 rounded-8 bg-black-darken'>
-                <Swiper
-                  className='h-full'
-                  modules={[Autoplay]}
-                  slidesPerView={1}
-                  centeredSlides
-                  loop={recentAcquiredNfts.length > 1}
-                  direction='vertical'
-                  autoplay={{ delay: 3000 }}>
-                  {recentAcquiredNfts.map((recentNft) => (
-                    <SwiperSlide key={recentNft.userChallengeId}>
-                      <RecentNftCard
-                        image={recentNft.nft.image || DEFAULT_PROFILE_IMAGE_URL}
-                        title={recentNft.challengeName}
-                        description={recentNft.nft.description || recentNft.nft.name || '도전과제 달성으로 획득'}
-                        date={formatProfileDate(recentNft.acquiredAt)}
-                      />
-                    </SwiperSlide>
-                  ))}
-                </Swiper>
-              </div>
-            )}
+        <div
+          className='scrollbar-web-hidden flex min-h-0 flex-1 w-full flex-col gap-8 overflow-y-auto'
+          style={{ paddingBottom: scrollBottomPadding }}>
+          {recentAcquiredNfts.length > 0 && (
+            <div className='mb-16 h-76 w-full shrink-0 rounded-8 bg-black-darken'>
+              <Swiper
+                className='h-full'
+                modules={[Autoplay]}
+                slidesPerView={1}
+                centeredSlides
+                loop={recentAcquiredNfts.length > 1}
+                direction='vertical'
+                autoplay={{ delay: 3000 }}>
+                {recentAcquiredNfts.map((recentNft) => (
+                  <SwiperSlide key={recentNft.userChallengeId}>
+                    <RecentNftCard
+                      image={recentNft.nft.image || DEFAULT_PROFILE_IMAGE_URL}
+                      title={recentNft.challengeName}
+                      description={recentNft.nft.description || recentNft.nft.name || '도전과제 달성으로 획득'}
+                      date={formatProfileDate(recentNft.acquiredAt)}
+                    />
+                  </SwiperSlide>
+                ))}
+              </Swiper>
+            </div>
+          )}
 
-            {isCompletedBungsLoading ? (
-              <CompletedBungListSkeleton />
-            ) : (
-              completedBungList.map((bung) => (
-                <CompletedBung
-                  key={bung.bungId}
-                  bungId={bung.bungId}
-                  title={bung.name}
-                  location={bung.location}
-                  date={formatBungDate(bung.startDateTime)}
-                  currentUserId={userInfo?.userId}
-                />
-              ))
-            )}
-          </div>
-          <OverlayScrollbar scrollRef={listScrollRef} />
+          {isCompletedBungsLoading ? (
+            <CompletedBungListSkeleton />
+          ) : (
+            completedBungList.map((bung) => (
+              <CompletedBung
+                key={bung.bungId}
+                bungId={bung.bungId}
+                title={bung.name}
+                location={bung.location}
+                date={formatBungDate(bung.startDateTime)}
+                currentUserId={userInfo?.userId}
+              />
+            ))
+          )}
         </div>
       </div>
     </section>

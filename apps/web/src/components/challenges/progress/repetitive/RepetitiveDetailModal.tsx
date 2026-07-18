@@ -4,7 +4,6 @@ import clsx from 'clsx'
 import { useRef, useMemo } from 'react'
 import { useModal } from '@contexts/ModalProvider'
 import { BottomSheet, BottomSheetRef, Dimmed } from '@shared/Modal'
-import OverlayScrollbar from '@shared/OverlayScrollbar'
 import { BrokenXIcon } from '@icons/x'
 import { useRepetitiveChallengeDetail } from '@apis/v1/challenges/repetitive/[challengeId]/query'
 import type { ApiDateTime } from '@utils/api'
@@ -28,7 +27,6 @@ type Stage = {
 export default function RepetitiveChallengeDetail({ challengeId }: { challengeId: number }) {
   const { closeModal } = useModal()
   const sheetRef = useRef<BottomSheetRef>(null)
-  const rewardListRef = useRef<HTMLDivElement>(null)
   const handleClose = () => sheetRef.current?.close()
   const { data: details, isLoading, error } = useRepetitiveChallengeDetail({ challengeId })
   const challenge = details?.data
@@ -173,9 +171,8 @@ export default function RepetitiveChallengeDetail({ challengeId }: { challengeId
                 </div>
 
                 {/* 보상 카드 리스트 */}
-                <div className='relative h-[calc(100%-336px)]'>
-                  <div ref={rewardListRef} className='scrollbar-web-hidden h-full overflow-y-auto'>
-                    <div className='flex flex-col gap-8 px-16 pt-20'>
+                <div className='scrollbar-web-hidden relative h-[calc(100%-336px)] overflow-y-auto'>
+                  <div className='flex flex-col gap-8 px-16 pt-20'>
                     {stages.map((stage, index) => {
                       const isCompleted = stage.isCompleted
                       const isInProgress = stage.isInProgress
@@ -219,11 +216,9 @@ export default function RepetitiveChallengeDetail({ challengeId }: { challengeId
                         </div>
                       )
                     })}
-                    </div>
-                    {/* 하단 그라데이션 blur 효과 */}
-                    <div className='pointer-events-none sticky bottom-0 h-100 bg-gradient-to-b from-transparent via-gray-lighten/80 to-gray-lighten' />
                   </div>
-                  <OverlayScrollbar scrollRef={rewardListRef} />
+                  {/* 하단 그라데이션 blur 효과 */}
+                  <div className='pointer-events-none sticky bottom-0 h-100 bg-gradient-to-b from-transparent via-gray-lighten/80 to-gray-lighten' />
                 </div>
               </section>
             </>

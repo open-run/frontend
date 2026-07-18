@@ -3,7 +3,6 @@
 import { useRef, useState } from 'react'
 import { useModal } from '@contexts/ModalProvider'
 import { BottomSheet, BottomSheetRef, Dimmed } from '@shared/Modal'
-import OverlayScrollbar from '@shared/OverlayScrollbar'
 import { BrokenXIcon } from '@icons/x'
 import { MODAL_KEY } from '@constants/modal'
 import { colors } from '@styles/colors'
@@ -35,7 +34,6 @@ export default function CreateBung({
 }) {
   const { closeModal } = useModal()
   const sheetRef = useRef<BottomSheetRef>(null)
-  const stepScrollRef = useRef<HTMLElement>(null)
   const handleClose = () => sheetRef.current?.close()
 
   const [step, setStep] = useState<'create' | 'invitation'>(initialStep)
@@ -56,12 +54,9 @@ export default function CreateBung({
           </button>
         </header>
 
-        <div className='relative h-[calc(100%-110px)]'>
-          <section ref={stepScrollRef} className='scrollbar-web-hidden h-full overflow-y-auto'>
-            {step === 'create' ? <Forms nextStep={() => setStep('invitation')} initialDraft={initialDraft} /> : <Invitation />}
-          </section>
-          <OverlayScrollbar scrollRef={stepScrollRef} />
-        </div>
+        <section className='scrollbar-web-hidden h-[calc(100%-110px)] overflow-y-auto'>
+          {step === 'create' ? <Forms nextStep={() => setStep('invitation')} initialDraft={initialDraft} /> : <Invitation />}
+        </section>
       </BottomSheet>
     </Dimmed>
   )

@@ -4,7 +4,6 @@ import clsx from 'clsx'
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { parseAsString, parseAsStringLiteral, useQueryStates } from 'nuqs'
 import Recommendation from '@components/home/Recommendation'
-import OverlayScrollbar from '@shared/OverlayScrollbar'
 import { MagnifierIcon } from '@icons/magnifier'
 import useAppInsetSize from '@hooks/useAppInsetSize'
 import { colors } from '@styles/colors'
@@ -14,7 +13,6 @@ const SEARCH_CATEGORY_QUERY_VALUES = ['ALL', 'NAME', 'MEMBER', 'HASHTAG', 'LOCAT
 
 export default function Explore() {
   const inputRef = useRef<HTMLInputElement>(null)
-  const listScrollRef = useRef<HTMLDivElement>(null)
   const [{ keyword: searchKeyword, category: selectedTab }, setSearchParams] = useQueryStates(
     {
       keyword: parseAsString.withDefault(''),
@@ -86,22 +84,18 @@ export default function Explore() {
           )}
         </div>
       </div>
-      <div className='relative h-[calc(100%-140px)] w-full'>
-        <div
-          ref={listScrollRef}
-          className='scrollbar-web-hidden h-full w-full overflow-y-auto pb-80'
-          style={{ paddingBottom: listBottomPadding }}>
-          {shouldShowRecommendation && <Recommendation />}
-          {shouldShowSearchHint && <ExploreSearchHint />}
-          {isSearchActive && shouldShowSearchResult && (
-            <ExploreSearch
-              searchKeyword={searchKeyword}
-              selectedTab={selectedTab}
-              setSelectedTab={setSelectedTab}
-            />
-          )}
-        </div>
-        <OverlayScrollbar scrollRef={listScrollRef} />
+      <div
+        className='scrollbar-web-hidden h-[calc(100%-140px)] w-full overflow-y-auto pb-80'
+        style={{ paddingBottom: listBottomPadding }}>
+        {shouldShowRecommendation && <Recommendation />}
+        {shouldShowSearchHint && <ExploreSearchHint />}
+        {isSearchActive && shouldShowSearchResult && (
+          <ExploreSearch
+            searchKeyword={searchKeyword}
+            selectedTab={selectedTab}
+            setSelectedTab={setSelectedTab}
+          />
+        )}
       </div>
     </section>
   )

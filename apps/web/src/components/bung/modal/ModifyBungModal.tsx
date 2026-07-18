@@ -12,7 +12,6 @@ import HashTag from '@shared/HashTag'
 import Input from '@shared/Input'
 import LoadingLogo from '@shared/LoadingLogo'
 import { BottomSheet, BottomSheetRef, Dimmed } from '@shared/Modal'
-import OverlayScrollbar from '@shared/OverlayScrollbar'
 import NumberInput from '@shared/NumberInput'
 import PrimaryButton from '@shared/PrimaryButton'
 import TextArea from '@shared/TextArea'
@@ -44,7 +43,6 @@ export default function ModifyBungModal({ details }: { details: BungInfo }) {
   const router = useRouter()
   const { showModal, closeModal } = useModal()
   const sheetRef = useRef<BottomSheetRef>(null)
-  const formScrollRef = useRef<HTMLElement>(null)
   const handleClose = () => sheetRef.current?.close()
   const { mutate: modifyBung, isPending } = useModifyBung()
   const 참여중인멤버수 = details.memberList.length
@@ -114,9 +112,10 @@ export default function ModifyBungModal({ details }: { details: BungInfo }) {
           </button>
         </header>
 
-        <div className='relative h-[calc(100%-110px)]'>
-          <section ref={formScrollRef} className='scrollbar-web-hidden h-full overflow-y-auto'>
-            <form className='scrollbar-web-hidden flex w-full flex-col overflow-y-auto px-16' onSubmit={handleSubmit(onSubmit)}>
+        <section className='scrollbar-web-hidden h-[calc(100%-110px)] overflow-y-auto'>
+          <form
+            className='scrollbar-web-hidden flex w-full flex-col overflow-y-auto px-16'
+            onSubmit={handleSubmit(onSubmit)}>
             <BungThumbnailPicker
               value={selectedMainImage}
               images={imageList}
@@ -280,10 +279,8 @@ export default function ModifyBungModal({ details }: { details: BungInfo }) {
             <div className='mb-40' style={{ marginBottom: submitButtonMarginBottom }}>
               <PrimaryButton type='submit'>{isPending ? <LoadingLogo className='mx-auto' /> : '수정 완료'}</PrimaryButton>
             </div>
-            </form>
-          </section>
-          <OverlayScrollbar scrollRef={formScrollRef} />
-        </div>
+          </form>
+        </section>
       </BottomSheet>
     </Dimmed>
   )

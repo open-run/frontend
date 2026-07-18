@@ -7,6 +7,7 @@ import ReactQueryProvider from '@contexts/ReactQueryProvider'
 import { WalletProvider } from '@contexts/WalletProvider'
 import AppBridge from '@shared/AppBridge'
 import Layout from '@shared/Layout'
+import OverlayScrollbarManager from '@shared/OverlayScrollbarManager'
 import RouteViewTransitions from '@shared/RouteViewTransitions'
 import '@styles/globals.css'
 
@@ -27,6 +28,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
                   <AppBridge>
                     <ModalProvider>
                       <Layout>{children}</Layout>
+                      <OverlayScrollbarManager />
                     </ModalProvider>
                   </AppBridge>
                 </NuqsAdapter>

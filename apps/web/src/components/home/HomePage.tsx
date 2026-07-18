@@ -4,7 +4,6 @@ import { useEffect } from 'react'
 import Header from '@components/home/Header'
 import Recommendation from '@components/home/Recommendation'
 import ScheduledBungs from '@components/home/ScheduledBungs'
-import OverlayScrollbar from '@shared/OverlayScrollbar'
 import Spacing from '@shared/Spacing'
 import useElementScrollRestoration from '@hooks/useElementScrollRestoration'
 import useAppInsetSize from '@hooks/useAppInsetSize'
@@ -42,7 +41,6 @@ export default function HomePage() {
         <Spacing size={40} />
         <Recommendation />
       </section>
-      <OverlayScrollbar scrollRef={scrollRef} />
     </div>
   )
 }

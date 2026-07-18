@@ -8,7 +8,6 @@ import { Fragment, useEffect, useRef } from 'react'
 import { useQueryClient } from '@tanstack/react-query'
 import { useModal } from '@contexts/ModalProvider'
 import { BungInfo } from '@type/bung'
-import OverlayScrollbar from '@shared/OverlayScrollbar'
 import PrimaryButton from '@shared/PrimaryButton'
 import RunStartedText from '@shared/RunStartedText'
 import ToastModal from '@shared/ToastModal'
@@ -263,174 +262,172 @@ export default function BungDetails({ details, initialChatAction }: { details: B
           </div>
         )}
 
-        <div className='relative' style={{ height: 벙에참여한유저인가 ? 'calc(100% - 80px)' : 'calc(100% - 50px)' }}>
-          <section
-            ref={containerRef}
-            className='scrollbar-web-hidden h-full overflow-y-auto rounded-[8px_8px_0_0] bg-gray-lighten pb-50'
-            onScroll={handleBungDetailScroll}>
-            <Fragment>
-              <div className='mb-24 rounded-8 bg-white p-16 shadow-floating-primary'>
-                <BungInfoIconGradientDefs />
+        <section
+          ref={containerRef}
+          className='scrollbar-web-hidden overflow-y-auto rounded-[8px_8px_0_0] bg-gray-lighten pb-50'
+          style={{ height: 벙에참여한유저인가 ? 'calc(100% - 80px)' : 'calc(100% - 50px)' }}
+          onScroll={handleBungDetailScroll}>
+          <Fragment>
+            <div className='mb-24 rounded-8 bg-white p-16 shadow-floating-primary'>
+              <BungInfoIconGradientDefs />
 
-                {/* 벙 이름 */}
-                <span className='mb-16 inline-block text-20 font-bold text-black'>{details.name}</span>
+              {/* 벙 이름 */}
+              <span className='mb-16 inline-block text-20 font-bold text-black'>{details.name}</span>
 
-                {/* 벙 위치 */}
-                <div className='mb-8 flex gap-8'>
-                  <PlaceIcon className='flex-shrink-0 translate-y-2' size={16} color={bungInfoIconColor} />
-                  <span className='text-14 text-black'>{details.location}</span>
+              {/* 벙 위치 */}
+              <div className='mb-8 flex gap-8'>
+                <PlaceIcon className='flex-shrink-0 translate-y-2' size={16} color={bungInfoIconColor} />
+                <span className='text-14 text-black'>{details.location}</span>
+              </div>
+
+              {/* 벙 시작 날짜 및 시간 */}
+              <div className='mb-8 flex items-center gap-8'>
+                <CalendarIcon size={16} color={bungInfoIconColor} />
+                <span className='text-14 text-black'>
+                  {formatDate({ date: details.startDateTime, formatStr: 'M월 d일 (E) a h:mm', convertUTCtoLocale: true })}
+                </span>
+              </div>
+
+              {/* 벙 거리 및 페이스 */}
+              <div className='mb-8 flex items-center gap-8'>
+                <RunnerIcon size={16} color={bungInfoIconColor} />
+                <span className='text-14 text-black'>{`${details.distance} km ${details.pace}`}</span>
+              </div>
+
+              {/* 벙 참여 인원 및 남은 자리 */}
+              <div className='mb-24 flex items-center gap-8'>
+                <FilledPersonIcon size={16} color={bungInfoIconColor} />
+                <div className='flex items-center gap-4'>
+                  <span className='text-14 text-black'>{`${참여인원수} / ${details.memberNumber}`}</span>
+                  <span className='rounded-4 bg-pink/10 px-4 py-2 text-12 font-bold text-pink'>{`${details.memberNumber - 참여인원수}자리 남았어요`}</span>
                 </div>
-
-                {/* 벙 시작 날짜 및 시간 */}
-                <div className='mb-8 flex items-center gap-8'>
-                  <CalendarIcon size={16} color={bungInfoIconColor} />
-                  <span className='text-14 text-black'>
-                    {formatDate({ date: details.startDateTime, formatStr: 'M월 d일 (E) a h:mm', convertUTCtoLocale: true })}
-                  </span>
-                </div>
-
-                {/* 벙 거리 및 페이스 */}
-                <div className='mb-8 flex items-center gap-8'>
-                  <RunnerIcon size={16} color={bungInfoIconColor} />
-                  <span className='text-14 text-black'>{`${details.distance} km ${details.pace}`}</span>
-                </div>
-
-                {/* 벙 참여 인원 및 남은 자리 */}
-                <div className='mb-24 flex items-center gap-8'>
-                  <FilledPersonIcon size={16} color={bungInfoIconColor} />
-                  <div className='flex items-center gap-4'>
-                    <span className='text-14 text-black'>{`${참여인원수} / ${details.memberNumber}`}</span>
-                    <span className='rounded-4 bg-pink/10 px-4 py-2 text-12 font-bold text-pink'>{`${details.memberNumber - 참여인원수}자리 남았어요`}</span>
-                  </div>
-                </div>
-                {벙에참여한유저인가 ? (
-                  <Fragment>
-                    <div className='mb-8 flex h-56 w-full items-center justify-between gap-12 rounded-8 border border-black-darken pl-16 pr-8'>
-                      <p className='min-w-0 flex-1 whitespace-pre-line text-start text-12 font-bold text-black-darken'>
-                        {벙에참여한벙주인가
-                          ? '러닝 시작 전, 모든 멤버가 모이면\n참여 인증을 안내해 주세요'
-                          : '러닝 시작 전, 벙주의 안내에 따라\n참여 인증을 해주세요'}
-                      </p>
-                      <button
-                        className='shrink-0 rounded-8 bg-black-darken px-14 py-10 text-14 font-bold text-white active-press-duration active:scale-90 active:bg-black-darken/80 disabled:bg-gray disabled:text-white'
-                        disabled={현재유저의벙참여정보?.participationStatus === true}
-                        onClick={() => {
-                          showModal({
-                            key: MODAL_KEY.CERTIFY_PARTICIPATION,
-                            component: (
-                              <CertifyParticipationModal
-                                bungId={details.bungId}
-                                lat={details.latitude}
-                                lng={details.longitude}
-                              />
-                            ),
-                          })
-                        }}>
-                        참여 인증
-                      </button>
-                    </div>
+              </div>
+              {벙에참여한유저인가 ? (
+                <Fragment>
+                  <div className='mb-8 flex h-56 w-full items-center justify-between gap-12 rounded-8 border border-black-darken pl-16 pr-8'>
+                    <p className='min-w-0 flex-1 whitespace-pre-line text-start text-12 font-bold text-black-darken'>
+                      {벙에참여한벙주인가
+                        ? '러닝 시작 전, 모든 멤버가 모이면\n참여 인증을 안내해 주세요'
+                        : '러닝 시작 전, 벙주의 안내에 따라\n참여 인증을 해주세요'}
+                    </p>
                     <button
-                      className='flex h-32 w-full items-center justify-between rounded-8 bg-gray-lighten px-16 active-press-duration active:scale-98 active:bg-gray/50'
+                      className='shrink-0 rounded-8 bg-black-darken px-14 py-10 text-14 font-bold text-white active-press-duration active:scale-90 active:bg-black-darken/80 disabled:bg-gray disabled:text-white'
+                      disabled={현재유저의벙참여정보?.participationStatus === true}
                       onClick={() => {
                         showModal({
-                          key: MODAL_KEY.WHY_CERTIFICATION,
-                          component: <WhyCertificationModal />,
+                          key: MODAL_KEY.CERTIFY_PARTICIPATION,
+                          component: (
+                            <CertifyParticipationModal
+                              bungId={details.bungId}
+                              lat={details.latitude}
+                              lng={details.longitude}
+                            />
+                          ),
                         })
                       }}>
-                      <p className='text-12 font-bold text-black-darken'>참여 인증을 왜 해야 하나요?</p>
-                      <ArrowRightIcon size={16} color={colors.black.darken} />
+                      참여 인증
                     </button>
-                    {벙에참여한벙주인가 && (
-                      <>
-                        <button
-                          className='mt-16 h-56 w-full rounded-8 bg-black-darken text-16 font-bold text-white active-press-duration active:scale-98 active:bg-black-darken/80 disabled:bg-gray disabled:text-white'
-                          disabled={벙이진행중인가 === false}
-                          onClick={handleBungComplete}>
-                          벙 완료
-                        </button>
-                        {벙이진행중인가 === false && (
-                          <p className='mt-4 text-center text-12 font-semibold text-gray-darken'>
-                            {formatDate({
-                              date: details.endDateTime,
-                              formatStr: 'M/d a h:mm',
-                              convertUTCtoLocale: true,
-                            })}{' '}
-                            이후에 버튼이 활성화됩니다
-                          </p>
-                        )}
-                      </>
-                    )}
-                  </Fragment>
-                ) : (
-                  <PrimaryButton disabled={details.memberNumber - 참여인원수 <= 0} onClick={handleJoinBung}>
-                    참여하기
-                  </PrimaryButton>
+                  </div>
+                  <button
+                    className='flex h-32 w-full items-center justify-between rounded-8 bg-gray-lighten px-16 active-press-duration active:scale-98 active:bg-gray/50'
+                    onClick={() => {
+                      showModal({
+                        key: MODAL_KEY.WHY_CERTIFICATION,
+                        component: <WhyCertificationModal />,
+                      })
+                    }}>
+                    <p className='text-12 font-bold text-black-darken'>참여 인증을 왜 해야 하나요?</p>
+                    <ArrowRightIcon size={16} color={colors.black.darken} />
+                  </button>
+                  {벙에참여한벙주인가 && (
+                    <>
+                      <button
+                        className='mt-16 h-56 w-full rounded-8 bg-black-darken text-16 font-bold text-white active-press-duration active:scale-98 active:bg-black-darken/80 disabled:bg-gray disabled:text-white'
+                        disabled={벙이진행중인가 === false}
+                        onClick={handleBungComplete}>
+                        벙 완료
+                      </button>
+                      {벙이진행중인가 === false && (
+                        <p className='mt-4 text-center text-12 font-semibold text-gray-darken'>
+                          {formatDate({
+                            date: details.endDateTime,
+                            formatStr: 'M/d a h:mm',
+                            convertUTCtoLocale: true,
+                          })}{' '}
+                          이후에 버튼이 활성화됩니다
+                        </p>
+                      )}
+                    </>
+                  )}
+                </Fragment>
+              ) : (
+                <PrimaryButton disabled={details.memberNumber - 참여인원수 <= 0} onClick={handleJoinBung}>
+                  참여하기
+                </PrimaryButton>
+              )}
+            </div>
+
+            {/* N명이 함께 뛸 예정이에요 */}
+            <div className='mb-24 flex flex-col gap-8'>
+              <div className='flex w-full items-center justify-between px-16'>
+                <span className='text-16 font-bold text-black-darken'>{참여인원수}명이 함께 뛸 예정이에요</span>
+                {벙에참여한벙주인가 && (
+                  <button
+                    className='rounded-8 px-8 py-4 text-14 font-normal text-black-darken active-press-duration active:scale-90 active:bg-gray/50'
+                    onClick={() => pushTransitionRouter.push(`/bung/${bungId}/manage-members`)}>
+                    멤버관리
+                  </button>
                 )}
               </div>
-
-              {/* N명이 함께 뛸 예정이에요 */}
-              <div className='mb-24 flex flex-col gap-8'>
-                <div className='flex w-full items-center justify-between px-16'>
-                  <span className='text-16 font-bold text-black-darken'>{참여인원수}명이 함께 뛸 예정이에요</span>
-                  {벙에참여한벙주인가 && (
-                    <button
-                      className='rounded-8 px-8 py-4 text-14 font-normal text-black-darken active-press-duration active:scale-90 active:bg-gray/50'
-                      onClick={() => pushTransitionRouter.push(`/bung/${bungId}/manage-members`)}>
-                      멤버관리
-                    </button>
-                  )}
-                </div>
-                <div className='scrollbar-hidden flex gap-8 overflow-x-auto pl-16 pr-24'>
-                  {memberListWithOwnerFirst.map((member) => (
-                    <div key={member.userId} className='flex shrink-0 flex-col items-center gap-6'>
-                      <div className='relative aspect-[1] w-76 rounded-8 bg-black'>
-                        <Image
-                          className='object-contain'
-                          src={member.profileImageUrl || DEFAULT_PROFILE_IMAGE_URL}
-                          alt=''
-                          fill
-                          sizes='76px'
-                        />
-                      </div>
-                      <div className='flex items-center gap-4'>
-                        <span className='text-12 font-bold text-black-darken'>{member.nickname}</span>
-                        {member.owner && <OwnerCrownIcon size={16} color={bungInfoIconColor} />}
-                      </div>
+              <div className='scrollbar-hidden flex gap-8 overflow-x-auto pl-16 pr-24'>
+                {memberListWithOwnerFirst.map((member) => (
+                  <div key={member.userId} className='flex shrink-0 flex-col items-center gap-6'>
+                    <div className='relative aspect-[1] w-76 rounded-8 bg-black'>
+                      <Image
+                        className='object-contain'
+                        src={member.profileImageUrl || DEFAULT_PROFILE_IMAGE_URL}
+                        alt=''
+                        fill
+                        sizes='76px'
+                      />
                     </div>
-                  ))}
-                </div>
-              </div>
-
-              {/* 벙 설명 */}
-              <p className='w-full px-16 text-14 text-black-darken'>{details.description}</p>
-
-              {/* 벙 뒷풀이 */}
-              {details.hasAfterRun && (
-                <>
-                  <h3 className='mt-24 pl-16 text-14 font-bold text-black-darken'>뒷풀이</h3>
-                  <p className='mt-4 pl-16 text-14 text-black-darken'>{details.afterRunDescription}</p>
-                </>
-              )}
-
-              {/* 위치 및 지도 */}
-              <div className='mb-8 mt-40 flex gap-4 px-16'>
-                <PlaceIcon className='flex-shrink-0 translate-y-2' size={16} color={bungInfoIconColor} />
-                <span className='whitespace-pre-wrap text-14 font-bold text-black-darken'>{details.location}</span>
-              </div>
-              <div className='mb-18 px-16'>
-                <GoogleMap lat={details.latitude} lng={details.longitude} />
-              </div>
-
-              {/* 해시태그 */}
-              <div className='mb-80 flex flex-wrap gap-8 px-16' style={{ marginBottom: hashtagMarginBottom }}>
-                {details.hashtags.map((label) => (
-                  <HashTag key={label} label={label} />
+                    <div className='flex items-center gap-4'>
+                      <span className='text-12 font-bold text-black-darken'>{member.nickname}</span>
+                      {member.owner && <OwnerCrownIcon size={16} color={bungInfoIconColor} />}
+                    </div>
+                  </div>
                 ))}
               </div>
-            </Fragment>
-          </section>
-          <OverlayScrollbar scrollRef={containerRef} />
-        </div>
+            </div>
+
+            {/* 벙 설명 */}
+            <p className='w-full px-16 text-14 text-black-darken'>{details.description}</p>
+
+            {/* 벙 뒷풀이 */}
+            {details.hasAfterRun && (
+              <>
+                <h3 className='mt-24 pl-16 text-14 font-bold text-black-darken'>뒷풀이</h3>
+                <p className='mt-4 pl-16 text-14 text-black-darken'>{details.afterRunDescription}</p>
+              </>
+            )}
+
+            {/* 위치 및 지도 */}
+            <div className='mb-8 mt-40 flex gap-4 px-16'>
+              <PlaceIcon className='flex-shrink-0 translate-y-2' size={16} color={bungInfoIconColor} />
+              <span className='whitespace-pre-wrap text-14 font-bold text-black-darken'>{details.location}</span>
+            </div>
+            <div className='mb-18 px-16'>
+              <GoogleMap lat={details.latitude} lng={details.longitude} />
+            </div>
+
+            {/* 해시태그 */}
+            <div className='mb-80 flex flex-wrap gap-8 px-16' style={{ marginBottom: hashtagMarginBottom }}>
+              {details.hashtags.map((label) => (
+                <HashTag key={label} label={label} />
+              ))}
+            </div>
+          </Fragment>
+        </section>
       </motion.section>
     </section>
   )
