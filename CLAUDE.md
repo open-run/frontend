@@ -102,18 +102,24 @@ package. Prettier import-order grouping (`.prettierrc.json`) follows these alias
 
 ## Mobile WebView bridge
 
-One codebase runs in browser and in a RN WebView. `apps/web/src/components/shared/AppBridge.tsx` is the
-hub:
+One codebase runs in browser and in a RN WebView (the app's WebView appends the UA token
+`OpenRunApp/<version>` via `applicationNameForUserAgent`).
 
-- `checkIsApp()` detects the WebView (`window.ReactNativeWebView`, iOS `webkit.messageHandlers`, Android
-  `wv` UA). On detection it sets `useAppStore().isApp = true` and toggles `document.body.classList` →
-  `app`. That class drives the Tailwind **`app:` variant** (e.g. `pb-16 app:pb-40`) for WebView-only styling.
-- Native → web messages arrive on both `window` and `document` `message` events; payloads are JSON
-  strings matching the `MESSAGE` enum in `@constants/app` (e.g. `INSET` carries safe-area insets stored
-  in `useAppStore().insets`).
+- **App detection is server-side and single-source**: the root layout reads the `user-agent` request
+  header, checks it with `isAppUserAgent()` from `@contexts/AppEnvProvider`, renders `<body class="app">`
+  for the app, and passes the flag down via `<AppEnvProvider>`. Consumers read it with `useAppEnv().isApp`
+  — never re-detect it any other way. The body class drives the Tailwind **`app:` variant**
+  (e.g. `pb-16 app:pb-40`) from the first paint; there is no client-side detection, store flag, or polling.
+- `apps/web/src/components/shared/AppBridge.tsx` handles native → web messages, which arrive on both
+  `window` and `document` `message` events; payloads are JSON strings matching the `MESSAGE` enum in
+  `@constants/app` (e.g. `INSET` carries safe-area insets stored in `useAppStore().insets`).
 - `postMessageToRN(payload)` sends web → native. `useMessageHandler(fn)` subscribes a component to
-  native messages (no-op unless `isApp`).
+  native messages (no-op unless `useAppEnv().isApp`).
+- `useGeolocation` deliberately does NOT use `isApp`: it picks the native path by checking
+  `window.ReactNativeWebView` (transport availability), so bridge-less webviews (e.g. KakaoTalk in-app
+  browser) safely fall back to `navigator.geolocation`.
 - `eruda` mobile console is injected only in development.
+- Note: because the root layout reads `headers()`, all routes render dynamically (no static prerender).
 
 ## State & providers
 

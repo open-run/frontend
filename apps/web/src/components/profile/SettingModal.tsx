@@ -4,7 +4,7 @@ import clsx from 'clsx'
 import Link from 'next/link'
 import { ReactNode, useRef } from 'react'
 import { useModal } from '@contexts/ModalProvider'
-import { useAppStore } from '@store/app'
+import { useAppEnv } from '@contexts/AppEnvProvider'
 import { BottomSheet, BottomSheetRef, Dimmed } from '@shared/Modal'
 import usePushTransitionRouter from '@shared/usePushTransitionRouter'
 import { ArrowRightIcon } from '@icons/arrow'
@@ -22,7 +22,7 @@ export default function SettingModal() {
   const sheetRef = useRef<BottomSheetRef>(null)
   const handleClose = () => sheetRef.current?.close()
   const { logout } = useLogout()
-  const { isApp } = useAppStore()
+  const { isApp } = useAppEnv()
   const sectionPaddingBottom = useAppInsetSize('bottom', 16)
 
   return (

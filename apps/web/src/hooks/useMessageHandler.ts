@@ -1,11 +1,11 @@
 import { useEffect } from 'react'
-import { useAppStore } from '@store/app'
+import { useAppEnv } from '@contexts/AppEnvProvider'
 import { BridgeMessage } from '@shared/AppBridge'
 
 type MessageHandler = (parsedMessage: BridgeMessage<unknown>) => void
 
 export const useMessageHandler = (messageHandler: MessageHandler) => {
-  const { isApp } = useAppStore()
+  const { isApp } = useAppEnv()
   useEffect(() => {
     if (!isApp) return
     const onMessageHandler = (event: MessageEvent) => {

@@ -12,8 +12,6 @@ type StatusBarOverride = {
 }
 
 type App = {
-  isApp: boolean
-  setIsApp: (isApp: boolean) => void
   insets: Insets | null
   setInsets: (insets: Insets) => void
   previewInsets: Insets | null
@@ -24,8 +22,6 @@ type App = {
 }
 
 export const useAppStore = create<App>()((set) => ({
-  isApp: false,
-  setIsApp: (isApp: boolean) => set(() => ({ isApp })),
   insets: null,
   setInsets: (insets: Insets) => set(() => ({ insets })),
   previewInsets: null,

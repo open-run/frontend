@@ -1,5 +1,6 @@
 'use client'
 
+import { useAppEnv } from '@contexts/AppEnvProvider'
 import { type Insets, useAppStore } from '@store/app'
 
 export type AppInsetEdge = keyof Insets
@@ -37,13 +38,15 @@ export function getAppInsetValue({
 }
 
 export function useAppInsetValue(edge: AppInsetEdge) {
-  const { isApp, insets, previewInsets } = useAppStore()
+  const { isApp } = useAppEnv()
+  const { insets, previewInsets } = useAppStore()
 
   return getAppInsetValue({ edge, insets, isApp, previewInsets })
 }
 
 export default function useAppInsetSize(edge: AppInsetEdge, base: number) {
-  const { isApp, insets, previewInsets } = useAppStore()
+  const { isApp } = useAppEnv()
+  const { insets, previewInsets } = useAppStore()
 
   return getAppInsetSize({ base, edge, insets, isApp, previewInsets })
 }

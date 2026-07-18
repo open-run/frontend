@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect } from 'react'
-import { useAppStore } from '@store/app'
+import { useAppEnv } from '@contexts/AppEnvProvider'
 
 const HIDE_DELAY_MS = 600
 const FADE_MS = 300
@@ -24,7 +24,7 @@ type ThumbEntry = {
  * 비활성이라 시스템 스크롤바가 그대로 담당한다.
  */
 export default function OverlayScrollbarManager() {
-  const isApp = useAppStore((state) => state.isApp)
+  const { isApp } = useAppEnv()
 
   useEffect(() => {
     if (isApp) return

@@ -1,5 +1,5 @@
 import { useCallback } from 'react'
-import { useAppStore } from '@store/app'
+import { useAppEnv } from '@contexts/AppEnvProvider'
 import { MESSAGE, VIBRATION_TYPE } from '@constants/app'
 import { postMessageToRN } from '@components/shared/AppBridge'
 
@@ -8,7 +8,7 @@ import { postMessageToRN } from '@components/shared/AppBridge'
  * @returns 진동을 호출하는 함수
  */
 export function useVibration() {
-  const { isApp } = useAppStore()
+  const { isApp } = useAppEnv()
 
   const vibrate = useCallback(
     (vibrationType: VIBRATION_TYPE = VIBRATION_TYPE.IMPACT_MEDIUM) => {

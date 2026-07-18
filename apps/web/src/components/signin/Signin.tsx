@@ -12,7 +12,7 @@ import {
   type Connector,
 } from '@reown/appkit-controllers'
 import { useModal } from '@contexts/ModalProvider'
-import { useAppStore } from '@store/app'
+import { useAppEnv } from '@contexts/AppEnvProvider'
 import { SmartWalletConnectResponse } from '@type/app'
 import { postMessageToRN } from '@shared/AppBridge'
 import LoadingLogo from '@shared/LoadingLogo'
@@ -36,7 +36,7 @@ type SocialAuthConnector = Connector & {
 }
 
 export default function Signin() {
-  const { isApp } = useAppStore()
+  const { isApp } = useAppEnv()
   return isApp ? <SignInApp /> : <SignInBrowser />
 }
 
