@@ -1,7 +1,8 @@
 'use client'
 
-import type { ReactNode } from 'react'
+import { useRef, type ReactNode } from 'react'
 import Link from 'next/link'
+import OverlayScrollbar from '@shared/OverlayScrollbar'
 import { ArrowLeftIcon } from '@icons/arrow'
 import useAppInsetSize from '@hooks/useAppInsetSize'
 import { colors } from '@styles/colors'
@@ -9,6 +10,7 @@ import { colors } from '@styles/colors'
 export default function ProfileSubpageShell({ title, children }: { title: string; children: ReactNode }) {
   const topPadding = useAppInsetSize('top', 0)
   const bottomPadding = useAppInsetSize('bottom', 24)
+  const contentScrollRef = useRef<HTMLElement>(null)
 
   return (
     <section
@@ -22,7 +24,12 @@ export default function ProfileSubpageShell({ title, children }: { title: string
         </Link>
         <span className='text-16 font-bold text-black'>{title}</span>
       </header>
-      <section className='min-h-0 flex-1 overflow-y-auto'>{children}</section>
+      <div className='relative min-h-0 flex-1'>
+        <section ref={contentScrollRef} className='scrollbar-web-hidden h-full overflow-y-auto'>
+          {children}
+        </section>
+        <OverlayScrollbar scrollRef={contentScrollRef} />
+      </div>
     </section>
   )
 }

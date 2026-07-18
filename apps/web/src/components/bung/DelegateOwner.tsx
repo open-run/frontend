@@ -2,10 +2,11 @@
 
 import Image from 'next/image'
 import { useRouter } from 'next/navigation'
-import { useMemo } from 'react'
+import { useMemo, useRef } from 'react'
 import { useModal } from '@contexts/ModalProvider'
 import ErrorFallback from '@shared/ErrorFallback'
 import Input from '@shared/Input'
+import OverlayScrollbar from '@shared/OverlayScrollbar'
 import Skeleton from '@shared/Skeleton'
 import { ArrowLeftIcon } from '@icons/arrow'
 import { MagnifierIcon } from '@icons/magnifier'
@@ -25,6 +26,7 @@ export default function DelegateOwner({ bungId }: { bungId: string }) {
   const { showModal } = useModal()
   const { search, setSearch, filteredList } = useFuseSearch(filteredMemberList, 'nickname')
   const topPadding = useAppInsetSize('top', 0)
+  const memberListRef = useRef<HTMLUListElement>(null)
 
   return (
     <section className='h-full w-full bg-gray-lighten' style={{ paddingTop: topPadding }} onClick={(e) => e.stopPropagation()}>
@@ -71,32 +73,35 @@ export default function DelegateOwner({ bungId }: { bungId: string }) {
             <ErrorFallback type='medium' />
           </div>
         ) : (
-          <ul className='scrollbar-hidden flex h-[calc(100%-230px)] flex-col gap-16 overflow-y-auto pb-40'>
-            {filteredList.map((member) => (
-              <li key={member.userId} className='flex items-center justify-between gap-8'>
-                <div className='flex items-center gap-16'>
-                  <Image
-                    className='rounded-8 bg-black-darken object-contain'
-                    src={member.profileImageUrl || DEFAULT_PROFILE_IMAGE_URL}
-                    alt={`${member.nickname}의 아바타`}
-                    width={76}
-                    height={76}
-                  />
-                  <span className='text-14 font-bold text-black-darken'>{member.nickname}</span>
-                </div>
-                <button
-                  className='active:scale-98 rounded-12 bg-black-darken px-13 py-4 text-12 text-white active-press-duration active:bg-black-darken/80'
-                  onClick={() =>
-                    showModal({
-                      key: MODAL_KEY.CONFIRM_DELEGATE,
-                      component: <ConfirmDelegateModal member={member} onSuccess={() => router.back()} />,
-                    })
-                  }>
-                  벙주 넘기기
-                </button>
-              </li>
-            ))}
-          </ul>
+          <div className='relative h-[calc(100%-230px)]'>
+            <ul ref={memberListRef} className='scrollbar-web-hidden flex h-full flex-col gap-16 overflow-y-auto pb-40'>
+              {filteredList.map((member) => (
+                <li key={member.userId} className='flex items-center justify-between gap-8'>
+                  <div className='flex items-center gap-16'>
+                    <Image
+                      className='rounded-8 bg-black-darken object-contain'
+                      src={member.profileImageUrl || DEFAULT_PROFILE_IMAGE_URL}
+                      alt={`${member.nickname}의 아바타`}
+                      width={76}
+                      height={76}
+                    />
+                    <span className='text-14 font-bold text-black-darken'>{member.nickname}</span>
+                  </div>
+                  <button
+                    className='active:scale-98 rounded-12 bg-black-darken px-13 py-4 text-12 text-white active-press-duration active:bg-black-darken/80'
+                    onClick={() =>
+                      showModal({
+                        key: MODAL_KEY.CONFIRM_DELEGATE,
+                        component: <ConfirmDelegateModal member={member} onSuccess={() => router.back()} />,
+                      })
+                    }>
+                    벙주 넘기기
+                  </button>
+                </li>
+              ))}
+            </ul>
+            <OverlayScrollbar scrollRef={memberListRef} />
+          </div>
         )}
       </section>
     </section>

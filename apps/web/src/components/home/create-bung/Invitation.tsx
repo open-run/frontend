@@ -2,8 +2,9 @@
 
 import { queryOptions, useQuery } from '@tanstack/react-query'
 import Image from 'next/image'
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import Input from '@shared/Input'
+import OverlayScrollbar from '@shared/OverlayScrollbar'
 import PrimaryButton from '@shared/PrimaryButton'
 import Spacing from '@shared/Spacing'
 import { CheckIcon } from '@icons/check'
@@ -91,9 +92,10 @@ export default function Invitation() {
   /* -------- */
 
   const 멤버추천리스트를보여줄상태인가 = debouncedSearch === ''
+  const memberListRef = useRef<HTMLUListElement>(null)
 
   return (
-    <section className='relative flex h-full w-full flex-col overflow-y-auto px-16'>
+    <section className='scrollbar-web-hidden relative flex h-full w-full flex-col overflow-y-auto px-16'>
       <Spacing size={16} />
       <Input
         className='pr-40'
@@ -125,11 +127,12 @@ export default function Invitation() {
         </ul>
       </div>
       <Spacing size={32} />
-      <ul
-        className='flex flex-col gap-8 overflow-y-auto pb-20 pr-8 h-[calc(100%-160px)]'
-        style={{ height: `calc(100% - ${160 + bottomInset}px)` }}>
-        {멤버추천리스트를보여줄상태인가 ? renderSuggestionList() : renderSearchedList()}
-      </ul>
+      <div className='relative h-[calc(100%-160px)]' style={{ height: `calc(100% - ${160 + bottomInset}px)` }}>
+        <ul ref={memberListRef} className='scrollbar-web-hidden flex h-full flex-col gap-8 overflow-y-auto pb-20 pr-8'>
+          {멤버추천리스트를보여줄상태인가 ? renderSuggestionList() : renderSearchedList()}
+        </ul>
+        <OverlayScrollbar scrollRef={memberListRef} />
+      </div>
       <div className='absolute w-[calc(100%-32px)] bottom-20' style={{ bottom: buttonBottom }}>
         <PrimaryButton disabled={selectedMembers.length === 0}>초대 완료</PrimaryButton>
       </div>

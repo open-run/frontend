@@ -1,8 +1,9 @@
 import clsx from 'clsx'
 import Image from 'next/image'
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useModal } from '@contexts/ModalProvider'
 import { Dimmed } from '@shared/Modal'
+import OverlayScrollbar from '@shared/OverlayScrollbar'
 import { TargetIcon } from '@icons/target'
 import { BrokenXIcon } from '@icons/x'
 import useDebounce from '@hooks/useDebounce'
@@ -27,6 +28,7 @@ export default function AddressSearchModal({ onComplete }: { onComplete: (addres
   const debouncedSearch = useDebounce(search, 300)
   const [suggestions, setSuggestions] = useState<Suggestion[]>([])
   const [selectedSuggestionPlaceId, setSelectedSuggestionPlaceId] = useState<string | null>(null)
+  const scrollRef = useRef<HTMLDivElement>(null)
 
   const { mutate: fetchPlacesAutocomplete } = usePlacesAutocomplete()
   const { mutate: fetchReverseGeocoding, isPending: isReverseGeocodingLoading } = useReverseGeocodingMutation()
@@ -114,93 +116,96 @@ export default function AddressSearchModal({ onComplete }: { onComplete: (addres
                 </button>
               )}
             </div>
-            <div className='h-[calc(100%-74px)] overflow-y-auto scrollbar-hide'>
-              {suggestions.length === 0 ? (
-                <div className='flex flex-col'>
-                  <button
-                    className='active:scale-98 mb-24 flex h-32 w-full items-center justify-center gap-4 rounded-8 bg-gray-lighten active-press-duration active:bg-gray/50 disabled:text-gray-darker'
-                    disabled={location == null || isReverseGeocodingLoading}
-                    onClick={handleCurrentLocationClick}>
-                    <span className='text-14'>현재 위치</span>
-                    <TargetIcon size={16} color={colors.black.darken} />
-                  </button>
-                  <span className='mb-8 text-14 font-bold'>검색 팁</span>
-                  <span className='text-14 text-gray-darker'>도로명 + 건물번호</span>
-                  <span className='mb-8 text-14 text-pink'>여의서로 330</span>
-                  <span className='text-14 text-gray-darker'>지번 주소</span>
-                  <span className='mb-8 text-14 text-pink'>잠실동 47</span>
-                  <span className='text-14 text-gray-darker'>장소명</span>
-                  <span className='mb-24 text-14 text-pink'>뚝섬한강공원, 서울숲</span>
-                  <span className='text-14 font-bold'>
-                    러닝을 시작할 정확한 위치는 &apos;상세주소&apos;란에 적어주세요
-                  </span>
-                  <span className='text-14'>
-                    <span className='text-gray-darker'>종로3가역</span>{' '}
-                    <span className='text-pink'>&apos;2-1번 출구 인근 물품보관함&apos;</span>
-                  </span>
-                </div>
-              ) : (
-                <ul className='flex flex-col divide-y divide-gray pb-24 pt-16'>
-                  {suggestions.map(({ placeId, mainAddress, secondaryAddress }) => (
-                    <li
-                      key={placeId}
-                      className={clsx(
-                        'group flex cursor-pointer flex-col p-8',
-                        selectedSuggestionPlaceId === null && 'rounded-8 active-press-duration active:bg-gray/50',
-                      )}
-                      onClick={() => {
-                        if (selectedSuggestionPlaceId === placeId) {
-                          setSelectedSuggestionPlaceId(null)
-                        } else {
-                          setSelectedSuggestionPlaceId(placeId)
-                        }
-                      }}>
-                      <div
+            <div className='relative h-[calc(100%-74px)]'>
+              <div ref={scrollRef} className='scrollbar-web-hidden h-full overflow-y-auto'>
+                {suggestions.length === 0 ? (
+                  <div className='flex flex-col'>
+                    <button
+                      className='active:scale-98 mb-24 flex h-32 w-full items-center justify-center gap-4 rounded-8 bg-gray-lighten active-press-duration active:bg-gray/50 disabled:text-gray-darker'
+                      disabled={location == null || isReverseGeocodingLoading}
+                      onClick={handleCurrentLocationClick}>
+                      <span className='text-14'>현재 위치</span>
+                      <TargetIcon size={16} color={colors.black.darken} />
+                    </button>
+                    <span className='mb-8 text-14 font-bold'>검색 팁</span>
+                    <span className='text-14 text-gray-darker'>도로명 + 건물번호</span>
+                    <span className='mb-8 text-14 text-pink'>여의서로 330</span>
+                    <span className='text-14 text-gray-darker'>지번 주소</span>
+                    <span className='mb-8 text-14 text-pink'>잠실동 47</span>
+                    <span className='text-14 text-gray-darker'>장소명</span>
+                    <span className='mb-24 text-14 text-pink'>뚝섬한강공원, 서울숲</span>
+                    <span className='text-14 font-bold'>
+                      러닝을 시작할 정확한 위치는 &apos;상세주소&apos;란에 적어주세요
+                    </span>
+                    <span className='text-14'>
+                      <span className='text-gray-darker'>종로3가역</span>{' '}
+                      <span className='text-pink'>&apos;2-1번 출구 인근 물품보관함&apos;</span>
+                    </span>
+                  </div>
+                ) : (
+                  <ul className='flex flex-col divide-y divide-gray pb-24 pt-16'>
+                    {suggestions.map(({ placeId, mainAddress, secondaryAddress }) => (
+                      <li
+                        key={placeId}
                         className={clsx(
-                          'flex items-center justify-between gap-8',
-                          selectedSuggestionPlaceId === null && 'active-press-duration group-active:scale-95',
-                        )}>
-                        <div className='flex flex-col'>
-                          <span className='text-14'>{renderHighlightKeyword(mainAddress, search)}</span>
-                          <span className='text-14 text-gray-darker'>{secondaryAddress}</span>
+                          'group flex cursor-pointer flex-col p-8',
+                          selectedSuggestionPlaceId === null && 'rounded-8 active-press-duration active:bg-gray/50',
+                        )}
+                        onClick={() => {
+                          if (selectedSuggestionPlaceId === placeId) {
+                            setSelectedSuggestionPlaceId(null)
+                          } else {
+                            setSelectedSuggestionPlaceId(placeId)
+                          }
+                        }}>
+                        <div
+                          className={clsx(
+                            'flex items-center justify-between gap-8',
+                            selectedSuggestionPlaceId === null && 'active-press-duration group-active:scale-95',
+                          )}>
+                          <div className='flex flex-col'>
+                            <span className='text-14'>{renderHighlightKeyword(mainAddress, search)}</span>
+                            <span className='text-14 text-gray-darker'>{secondaryAddress}</span>
+                          </div>
+                          {selectedSuggestionPlaceId === placeId && (
+                            <button
+                              className='flex-shrink-0 rounded-20 bg-black-darken px-18 py-4 text-14 text-white active-press-duration active:scale-90 active:bg-black-darken/80'
+                              onClick={(e) => {
+                                e.stopPropagation()
+                                onComplete(`${secondaryAddress} ${mainAddress}`)
+                                closeModal(MODAL_KEY.ADDRESS_SEARCH)
+                              }}>
+                              선택
+                            </button>
+                          )}
                         </div>
                         {selectedSuggestionPlaceId === placeId && (
-                          <button
-                            className='flex-shrink-0 rounded-20 bg-black-darken px-18 py-4 text-14 text-white active-press-duration active:scale-90 active:bg-black-darken/80'
-                            onClick={(e) => {
-                              e.stopPropagation()
-                              onComplete(`${secondaryAddress} ${mainAddress}`)
-                              closeModal(MODAL_KEY.ADDRESS_SEARCH)
-                            }}>
-                            선택
-                          </button>
+                          <div className='relative mt-8 aspect-[264/210] w-full'>
+                            {/* https://developers.google.com/maps/documentation/maps-static/start?hl=ko */}
+                            <Image
+                              className='rounded-10 border border-gray'
+                              src={`https://maps.googleapis.com/maps/api/staticmap?center=${mainAddress}&zoom=16&size=400x400&key=${process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY}`}
+                              alt='Google Static Map'
+                              fill
+                              unoptimized
+                              placeholder='blur'
+                              blurDataURL='/images/maps/map_placeholder.png'
+                            />
+                            <Image
+                              className='absolute left-1/2 top-[45%] -translate-x-1/2 -translate-y-1/2'
+                              src='/images/maps/marker_destination.png'
+                              alt='Destination Marker'
+                              width={20}
+                              height={35}
+                            />
+                          </div>
                         )}
-                      </div>
-                      {selectedSuggestionPlaceId === placeId && (
-                        <div className='relative mt-8 aspect-[264/210] w-full'>
-                          {/* https://developers.google.com/maps/documentation/maps-static/start?hl=ko */}
-                          <Image
-                            className='rounded-10 border border-gray'
-                            src={`https://maps.googleapis.com/maps/api/staticmap?center=${mainAddress}&zoom=16&size=400x400&key=${process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY}`}
-                            alt='Google Static Map'
-                            fill
-                            unoptimized
-                            placeholder='blur'
-                            blurDataURL='/images/maps/map_placeholder.png'
-                          />
-                          <Image
-                            className='absolute left-1/2 top-[45%] -translate-x-1/2 -translate-y-1/2'
-                            src='/images/maps/marker_destination.png'
-                            alt='Destination Marker'
-                            width={20}
-                            height={35}
-                          />
-                        </div>
-                      )}
-                    </li>
-                  ))}
-                </ul>
-              )}
+                      </li>
+                    ))}
+                  </ul>
+                )}
+              </div>
+              <OverlayScrollbar scrollRef={scrollRef} />
             </div>
           </div>
         </div>
