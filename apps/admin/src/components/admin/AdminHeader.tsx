@@ -1,6 +1,7 @@
 'use client'
 
 import clsx from 'clsx'
+import { motion } from 'framer-motion'
 import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
 import { useDisconnect } from '@reown/appkit/react'
@@ -10,6 +11,7 @@ import { removeCookie } from '@openrun/api-client/cookie'
 const MENU_ITEMS = [
   { href: '/avatar', label: '아바타' },
   { href: '/challenges', label: '도전과제' },
+  { href: '/user-nft', label: '유저 NFT' },
 ]
 
 export default function AdminHeader() {
@@ -64,12 +66,17 @@ function AdminMenu() {
             href={item.href}
             aria-current={selected ? 'page' : undefined}
             className={clsx(
-              'inline-flex h-30 flex-shrink-0 items-center rounded-full px-14 text-12 transition-colors duration-150',
-              selected
-                ? 'bg-white font-semibold text-[#1d1d1f] shadow-[0_1px_4px_rgba(0,0,0,0.12)]'
-                : 'font-medium text-[#6e6e73] hover:text-[#1d1d1f]',
+              'relative inline-flex h-30 flex-shrink-0 items-center rounded-full px-14 text-12 transition-colors duration-150',
+              selected ? 'font-semibold text-[#1d1d1f]' : 'font-medium text-[#6e6e73] hover:text-[#1d1d1f]',
             )}>
-            {item.label}
+            {selected && (
+              <motion.span
+                layoutId='admin-menu-active-pill'
+                className='absolute inset-0 rounded-full bg-white shadow-[0_1px_4px_rgba(0,0,0,0.12)]'
+                transition={{ type: 'spring', stiffness: 500, damping: 40 }}
+              />
+            )}
+            <span className='relative z-10'>{item.label}</span>
           </Link>
         )
       })}

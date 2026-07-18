@@ -25,7 +25,7 @@ export default function AvatarPartsGrid({ avatarList, wearingAvatar, onChangeWea
   }
 
   return (
-    <section className='min-h-0 flex-1 overflow-y-auto px-16 pb-40 pt-16'>
+    <section className='scrollbar-web-hidden min-h-0 flex-1 overflow-y-auto px-16 pb-40 pt-16'>
       <div className={GRID_CLASSNAME}>
         {avatarList.map((avatar, index) => (
           <AvatarPartCard
@@ -46,12 +46,12 @@ export default function AvatarPartsGrid({ avatarList, wearingAvatar, onChangeWea
 
 export function AvatarPartsGridSkeleton() {
   return (
-    <section className='min-h-0 flex-1 overflow-y-auto px-16 pb-40 pt-16'>
+    <section className='scrollbar-web-hidden min-h-0 flex-1 overflow-y-auto px-16 pb-40 pt-16'>
       <div className={GRID_CLASSNAME}>
         {Array.from({ length: SKELETON_CARD_COUNT }).map((_, index) => (
-          <div key={index} className='flex w-full flex-col items-center gap-10 rounded-8 bg-white/30 p-12'>
-            <div className='aspect-square w-full max-w-80 animate-pulse rounded-8 bg-white/60' />
-            <div className='h-12 w-3/5 animate-pulse rounded-4 bg-white/60' />
+          <div key={index} className='glass-inset flex w-full flex-col items-center gap-10 rounded-8 p-12'>
+            <div className='aspect-square w-full max-w-80 animate-pulse rounded-8 bg-black/[0.07]' />
+            <div className='h-12 w-3/5 animate-pulse rounded-4 bg-black/[0.07]' />
           </div>
         ))}
       </div>

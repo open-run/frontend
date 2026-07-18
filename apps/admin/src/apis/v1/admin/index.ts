@@ -10,6 +10,12 @@ export type AdminMe = {
   admin: boolean
 }
 
+export type AdminUser = {
+  userId: string
+  nickname: string | null
+  blockchainAddress: string
+}
+
 export type AdminNftAvatarItem = {
   tokenId: string
   name: string
@@ -18,12 +24,6 @@ export type AdminNftAvatarItem = {
   subCategory: SubCategory | null
   rarity: Rarity
   thumbnailUrl: string | null
-}
-
-export type AdminUser = {
-  userId: string
-  nickname: string | null
-  blockchainAddress: string
 }
 
 export type GrantAdminNftAvatarItemRequest = {
@@ -81,6 +81,7 @@ export type AdminMeResponse = ApiResponse<AdminMe>
 export type AdminUsersResponse = ApiResponse<AdminUser[]>
 export type AdminNftAvatarItemsResponse = ApiResponse<AdminNftAvatarItem[]>
 export type AdminNftAvatarTryOnItemsResponse = ApiResponse<Avatar[]>
+export type AdminOwnedNftAvatarItemsResponse = ApiResponse<Avatar[]>
 export type AdminNftGrantResponse = ApiResponse<AdminNftGrantResult>
 export type AdminChallengesResponse = ApiResponse<AdminChallenge[]>
 export type AdminChallengeResponse = ApiResponse<AdminChallenge>
@@ -93,17 +94,19 @@ export function fetchAdminUsers(): Promise<AdminUsersResponse> {
   return http.get('/v1/admin/users')
 }
 
-export function fetchAdminNftAvatarItems(): Promise<AdminNftAvatarItemsResponse> {
-  return http.get('/v1/admin/nft/avatar-items')
-}
-
 export function fetchAdminNftAvatarTryOnItems(): Promise<AdminNftAvatarTryOnItemsResponse> {
   return http.get('/v1/admin/nft/avatar-items/try-on')
 }
 
-export function grantAdminNftAvatarItem(
-  request: GrantAdminNftAvatarItemRequest,
-): Promise<AdminNftGrantResponse> {
+export function fetchAdminOwnedNftAvatarItems(address: string): Promise<AdminOwnedNftAvatarItemsResponse> {
+  return http.get('/v1/admin/nft/avatar-items/owned', { params: { address } })
+}
+
+export function fetchAdminNftAvatarItems(): Promise<AdminNftAvatarItemsResponse> {
+  return http.get('/v1/admin/nft/avatar-items')
+}
+
+export function grantAdminNftAvatarItem(request: GrantAdminNftAvatarItemRequest): Promise<AdminNftGrantResponse> {
   return http.post('/v1/admin/nft/avatar-items/grants', request)
 }
 
@@ -113,6 +116,22 @@ export function fetchAdminChallenges(): Promise<AdminChallengesResponse> {
 
 export function fetchAdminChallenge(challengeId: number): Promise<AdminChallengeResponse> {
   return http.get(`/v1/admin/challenges/${challengeId}`)
+}
+
+export type AdminChallengeCompletion = {
+  userChallengeId: number
+  userId: string
+  nickname: string | null
+  stageNumber: number
+  conditionCount: number
+  completedDate: string | number[] | null
+  nftCompleted: boolean
+}
+
+export type AdminChallengeCompletionsResponse = ApiResponse<AdminChallengeCompletion[]>
+
+export function fetchAdminChallengeCompletions(challengeId: number): Promise<AdminChallengeCompletionsResponse> {
+  return http.get(`/v1/admin/challenges/${challengeId}/completions`)
 }
 
 export function createAdminChallenge(request: AdminChallengeRequest): Promise<AdminChallengeResponse> {
