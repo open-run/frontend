@@ -2,13 +2,31 @@
 
 import { useMemo, useState } from 'react'
 import { useAdminNftAvatarTryOnItemsQuery } from '@apis/v1/admin/query'
-import { Avatar, SelectedCategory, WearingAvatar } from '@openrun/types'
+import { Avatar, MainCategory, SelectedCategory, SubCategory, WearingAvatar } from '@openrun/types'
 import { Category } from '@openrun/ui'
 import ImageWarmup from '@shared/ImageWarmup'
 import AvatarPartsGrid, { AvatarPartsGridSkeleton } from './AvatarPartsGrid'
 import AvatarPreviewBoard from './AvatarPreviewBoard'
 import { AVATAR_IMAGE_HEIGHT, AVATAR_IMAGE_SIZES, AVATAR_IMAGE_WIDTH } from './constants'
 import { EMPTY_WEARING_AVATAR, getWearableImageUrls, uniqueImageUrls } from './wearingAvatar'
+
+const MAIN_CATEGORY_LABELS: Record<MainCategory, string> = {
+  upperClothing: '상의',
+  lowerClothing: '하의',
+  fullSet: '세트',
+  footwear: '신발',
+  face: '얼굴',
+  skin: '피부',
+  hair: '헤어',
+  accessories: '장식',
+}
+
+const SUB_CATEGORY_LABELS: Record<SubCategory, string> = {
+  'head-accessories': '머리 장식',
+  'eye-accessories': '눈 장식',
+  'ear-accessories': '귀 장식',
+  'body-accessories': '몸 장식',
+}
 
 export default function AdminAvatarTryOnPanel() {
   const [wearingAvatar, setWearingAvatar] = useState<WearingAvatar>(EMPTY_WEARING_AVATAR)
@@ -48,7 +66,7 @@ export default function AdminAvatarTryOnPanel() {
           </div>
 
           <div className='flex items-center justify-between px-16 pt-16'>
-            <h3 className='text-16 font-bold text-black'>파츠 목록</h3>
+            <h3 className='text-16 font-bold text-black'>파츠 목록 ({getSelectedCategoryLabel(selectedCategory)})</h3>
             <span className='font-jost text-12 font-bold text-[#6e6e73]'>
               {filteredAvatarItems.length} / {avatarItems.length}
             </span>
@@ -71,6 +89,13 @@ export default function AdminAvatarTryOnPanel() {
       </div>
     </section>
   )
+}
+
+function getSelectedCategoryLabel({ mainCategory, subCategory }: SelectedCategory): string {
+  if (mainCategory == null) return '전체'
+  if (mainCategory === 'accessories' && subCategory != null) return SUB_CATEGORY_LABELS[subCategory]
+
+  return MAIN_CATEGORY_LABELS[mainCategory]
 }
 
 function isInSelectedCategory(avatar: Avatar, selectedCategory: SelectedCategory): boolean {
